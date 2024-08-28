@@ -1,0 +1,17 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: haproxy2
+  annotations:
+spec:
+  rules:
+  - host: enmonaws.athtem.eei.ericsson.se
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: haproxy
+          servicePort: 443
+  tls:
+  - hosts:
+    - enmonaws.athtem.eei.ericsson.se

@@ -1,0 +1,25 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tcpserver7
+  #namespace: istio
+spec:
+  selector:
+    matchLabels:
+      app: tcpserver7
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: tcpserver7
+    spec:
+      containers:
+      - name: tcpserver7
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-rhel6base:latest
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 8080
+          - containerPort: 7070
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]

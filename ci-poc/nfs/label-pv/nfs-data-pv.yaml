@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    enmnfs: "nfs-data"
+  name: nfs-data
+spec:
+  capacity:
+    storage: 20Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 131.160.142.101
+    path: "/ericsson/data"
+  persistentVolumeReclaimPolicy: Retain

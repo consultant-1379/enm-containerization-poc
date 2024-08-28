@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: httpd-ejb
+spec:
+  rules:
+  - host: ieatenmpd104-4.athtem.eei.ericsson.se
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: httpd
+          servicePort: 4447

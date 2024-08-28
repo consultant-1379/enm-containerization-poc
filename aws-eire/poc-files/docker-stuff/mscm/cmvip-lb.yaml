@@ -1,0 +1,25 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: cmvip-lb
+  labels:
+    app: mscm
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 59010
+      targetPort: 59010
+      protocol: TCP
+      name: corba-sec
+    - port: 59001
+      targetPort: 59001
+      protocol: TCP
+      name: corba
+    - port: 58170
+      targetPort: 58170
+      protocol: TCP
+      name: corba-secure
+  selector:
+    app: mscm

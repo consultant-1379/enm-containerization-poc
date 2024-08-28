@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mspm-corba-service
+  labels:
+    app: mspm
+spec:
+  type: NodePort
+  ports:
+  - port: 58151 #This is to clusterip (eg 10.105.7.197) (not used)
+    targetPort: 58151 # This is to pod ip (eg 192.168.4.195)
+    protocol: TCP
+    name: corba
+  selector:
+    app: mspm

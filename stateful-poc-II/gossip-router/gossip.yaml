@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gossiprouter-deployment
+spec:
+  selector:
+    matchLabels:
+      app: gossiprouter
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gossiprouter
+    spec:
+      containers:
+      - name: gossiprouter
+        resources:
+          requests:
+            memory: "2Gi"
+        image: dockerregistry:5000/rhel6-gossip-test
+        env:
+          - name: POD_IP
+            valueFrom:
+              fieldRef:
+                fieldPath: status.podIP
+          - name: CONFIG_FILE
+            value: "/ericsson/3pp/jggossiprouters/lib_for_caches/log4j.properties"
+          - name: CLASSPATH
+            value: "/ericsson/3pp/jggossiprouters/lib_for_caches/*"
+          - name: PORT
+            value: "12001"
+        ports:
+          - containerPort: 12001
+          - containerPort: 12002
+          - containerPort: 9990
+          - containerPort: 8009
+          - containerPort: 9999
+          - containerPort: 8080
+          - containerPort: 4447
+          - containerPort: 9999
+        command: ["/bin/sh", "-c"]
+        args:
+          - while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-norollback
+            mountPath: /ericsson/no_rollback
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: no-rollback
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: hcdumps

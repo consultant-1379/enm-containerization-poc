@@ -1,0 +1,2 @@
+- name: pv-smrs
+  mountPath: /ericsson/tor/smrs

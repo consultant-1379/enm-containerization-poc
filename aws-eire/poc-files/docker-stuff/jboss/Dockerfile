@@ -1,0 +1,6 @@
+FROM 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:rhel6basejava8
+MAINTAINER de lads
+RUN groupadd -g 205 jboss
+RUN useradd -gjboss -u 308 -d /home/jboss_user jboss_user
+#RUN groupadd -r jboss && useradd --no-log-init -r -g jboss jboss_user
+RUN yum install -y EXTRjboss_CXP9031339.noarch nc vim rsync

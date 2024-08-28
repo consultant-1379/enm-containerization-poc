@@ -1,0 +1,192 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supervc-deployment
+spec:
+  selector:
+    matchLabels:
+      app: supervc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: supervc
+    spec:
+      initContainers:
+      - name: service-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps -n default'
+      containers:
+      - name: supervc
+        resources:
+          requests:
+            memory: "2Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-supervisionclient
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 58178
+          - containerPort: 58179
+          - containerPort: 54500
+          - containerPort: 58180
+          - containerPort: 50692
+          - containerPort: 63045
+          - containerPort: 63013
+          - containerPort: 9990
+          - containerPort: 58151
+          - containerPort: 59560
+          - containerPort: 3528
+          - containerPort: 63113
+          - containerPort: 8009
+          - containerPort: 59530
+          - containerPort: 57419
+          - containerPort: 56139
+          - containerPort: 55500
+          - containerPort: 59500
+          - containerPort: 58156
+          - containerPort: 58157
+          - containerPort: 57422
+          - containerPort: 9999
+          - containerPort: 63056
+          - containerPort: 8080
+          - containerPort: 52689
+          - containerPort: 58161
+          - containerPort: 57425
+          - containerPort: 58162
+          - containerPort: 58163
+          - containerPort: 58164
+          - containerPort: 56212
+          - containerPort: 58165
+          - containerPort: 58166
+          - containerPort: 58167
+          - containerPort: 59000
+          - containerPort: 58168
+          - containerPort: 54200
+          - containerPort: 58169
+          - containerPort: 57113
+          - containerPort: 63034
+          - containerPort: 58170
+          - containerPort: 58171
+          - containerPort: 59100
+          - containerPort: 58172
+          - containerPort: 58173
+          - containerPort: 58174
+          - containerPort: 58175
+          - containerPort: 50719
+          - containerPort: 4447
+          - containerPort: 54400
+          - containerPort: 58176
+          - containerPort: 59200
+          - containerPort: 58177
+          - containerPort: 54689
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 12001
+          - containerPort: 12002
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/supervc_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-shared
+            mountPath: /ericsson/home
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: nfs-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: nfs-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: nfs-pmic1
+            mountPath: /ericsson/pmic1
+          - name: nfs-pmic2
+            mountPath: /ericsson/pmic2
+          - name: nfs-pmlinks
+            mountPath: /ericsson/symvol
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-configmgt
+          persistentVolumeClaim:
+            claimName: nfs-configmgt
+        - name: nfs-shared
+          persistentVolumeClaim:
+            claimName: nfs-home
+        - name: nfs-upgind
+          persistentVolumeClaim:
+            claimName: nfs-upgind
+        - name: nfs-pmic1
+          persistentVolumeClaim:
+            claimName: nfs-pm1
+        - name: nfs-pmic2
+          persistentVolumeClaim:
+            claimName: nfs-pm2
+        - name: nfs-pmlinks
+          persistentVolumeClaim:
+            claimName: nfs-pmlinks
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: supervc
+spec:
+  ports:
+    - name: jboss
+      port: 8080
+      targetPort: 8080
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: supervc

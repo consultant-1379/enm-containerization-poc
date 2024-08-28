@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: test
+  namespace: kube-system
+  labels:
+    k8s-app: kubernetes-dashboard
+  annotations:
+    ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: ieatenmpd104-4.athtem.eei.ericsson.se
+    http:
+      paths:
+      - path: /dash
+        backend:
+          serviceName: kubernetes-dashboard
+          servicePort: 443

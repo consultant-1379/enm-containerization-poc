@@ -1,0 +1,13 @@
+/var/ericsson/ddc_data -rw,soft nfsddcdata:/ericsson/ddc_data
+/ericsson/tor/data   -rw,soft  nfsdata:/ericsson/data
+/ericsson/enm/dumps   -rw,soft  nfshcdumps:/ericsson/hcdumps
+/ericsson/tor/no_rollback   -rw,soft   nfsnorollback:/ericsson/no_rollback
+/etc/opt/ericsson/ERICmodeldeployment  -rw,soft   nfsmdt:/ericsson/mdt
+/ericsson/batch  -rw,soft   nfsbatch:/ericsson/batch
+/home/shared  -rw,soft   nfshome:/ericsson/home
+/ericsson/config_mgt   -rw,soft    nfsconfigmgt:/ericsson/config_mgt
+/ericsson/vmcrons  -rw,soft    nfscron:/ericsson/cron
+/ericsson/enm/dlms/history/data   -rw,soft    nfsdlms:/ericsson/dlms
+/ericsson/custom     -rw,soft    nfscustom:/ericsson/custom
+/ericsson/enm/dumps     -rw,soft    nfshcdumps:/ericsson/hcdumps
+/ericsson/configuration_management/UpgradeIndependence    -rw,soft    nfsupgind:/ericsson/config_mgmt_upgind

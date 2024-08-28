@@ -1,0 +1,9 @@
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: amazonmq
+subsets:
+  - addresses:
+      - ip: 192.168.226.159
+    ports:
+      - port: 5671

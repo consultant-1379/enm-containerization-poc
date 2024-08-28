@@ -1,0 +1,21 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: fmvip-lb
+  labels:
+    app: msfm
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-internal: 0.0.0.0/0
+spec:
+  type: LoadBalancer
+  ports:
+    - port: 4569
+      targetPort: 4569
+      protocol: TCP
+      name: msfm-port1
+    - port: 4576
+      targetPort: 4576
+      protocol: TCP
+      name: msfm-port2
+  selector:
+    app: msfm

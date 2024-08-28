@@ -1,0 +1,91 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openidm-deployment
+spec:
+  selector:
+    matchLabels:
+      app: openidm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openidm
+    spec:
+      initContainers:
+      - name: openidm-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s postgres,secserv -n default'
+      containers:
+      - name: openidm
+        resources:
+          requests:
+            memory: "3Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-openidm
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 22
+          - containerPort: 36698
+          - containerPort: 8085
+          - containerPort: 52595
+          - containerPort: 40728
+          - containerPort: 12987
+          - containerPort: 8445
+          - containerPort: 8446
+          - containerPort: 37247
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/openidm_config.sh; while true; do sleep 300;done;
+        #command: ["/bin/bash"]
+        #args: ["-c","while true; do sleep 10;done"]
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: openidm
+spec:
+  ports:
+    - name: secure
+      port: 8445
+      targetPort: 8445
+    - name: someport
+      port: 8446
+      targetPort: 8443
+    - name: unsecure
+      port: 8085
+      targetPort: 8085
+  selector:
+    app: openidm

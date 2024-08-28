@@ -1,0 +1,24 @@
+server.json: |
+  {
+      "bind_addr": "0.0.0.0",
+      "bootstrap_expect": 3,
+      "server": true,
+      "datacenter": "dc1",
+      "disable_remote_exec": true,
+      "data_dir": "/ericsson/data",
+      "log_level": "INFO",
+      "domain": "enm",
+      "autopilot":{
+        "cleanup_dead_servers": false
+      },
+      "ports":{
+        "dns": 53
+      },
+      "dns_config":{
+        "only_passing": true
+      },
+      "raft_protocol": 3,
+      "rejoin_after_leave": true,
+      "disable_update_check": true,
+      "client_addr": "0.0.0.0"
+  }

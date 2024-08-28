@@ -1,0 +1,12 @@
+name: nginx-ingress
+version: 0.3.5
+appVersion: edge
+description: ENM NGINX Ingress Controller
+  - https://github.com/nginxinc/kubernetes-ingress/tree/master/deployment/helm-chart ## left for reference for POC
+keywords:
+  - ingress
+  - nginx
+maintainers:
+  - name: deLads
+    email: delads.defleppard@ericsson.com
+

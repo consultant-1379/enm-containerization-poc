@@ -1,0 +1,8 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: msfm-ingress-1
+spec:
+  backend:
+    serviceName: msfm-port-1
+    servicePort: 58170

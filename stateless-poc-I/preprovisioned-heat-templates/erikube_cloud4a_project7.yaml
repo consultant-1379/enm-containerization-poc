@@ -1,0 +1,74 @@
+parameter_defaults:
+
+  key_name: cloud4a-poject7
+
+  image_name: centos7-1708
+  master_flavor: m1.medium
+  minion_flavor: m1.large
+  lb_flavor:  m1.medium
+  manager_flavor: m1.medium
+
+  external_network: provider_network_4A
+
+  erikube_use_config_drive: true
+  erikube_timezone: UTC
+
+  os_user: eababub
+  os_password: Ericsson
+  os_url: http://131.160.201.5:5000/v3
+  os_project: Cloud4A_Cloud_project_007
+  ansible_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCY2XMujco6iY+sgY/Ix+oyTqPSEUsgdrPJ3FHL6K+T1/vk5HjAawjTKNwisJhAYjHj/Q1+WtRYw3tu71l6FqNuWtA19e00CA5BqTWZSPzliMuL6XIFaOkO33RRm6dKOPYNd015Enq3jy4Epeohkd5+NwKIbiS3U25fhyfWXyJuR8ypC28LZL7u0g1ejsTEyURFyUH/L7ci7VuS7zQ/IThtKbQJFYuOdpq4a0ZDsQjDEJ6UqiOQ6fKIRrMS4QcdZ0FU+rukI3X5H6BwNYyvaVIopXBnb6QLnR35Ofw+bM35noG6qgR8i6D1me7mYXZli2/M8r3s6oXyUyjdDJflyHRJ Generated-by-Nova"
+
+  ansible_private_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEAmNlzLo3KOomPrIGPyMfqMk6j0hFLIHazydxRy+ivk9f75OR4
+    wGsI0yjcIrCYQGIx4/0NflrUWMN7bu9ZehajblrQNfXtNAgOQak1mUj85YjLi+ly
+    BWjpDt90UZunSjj2DXdNeRJ6t48uBKXqIZHefjcCiG4kt1NuX4cn1l8ibkfMqQtv
+    C2S+7tINXo7ExMlERclB/y+3Iu1bku80PyE4bSm0CRWLjnaauGtGQ7EIwxCelKoj
+    kOnyiEazEuEHHWdBVPq7pCN1+R+gcDWMr2lSKKVwZ2+kC50d+Tn8PmzN+Z6BuqoE
+    fIug9Znu5mF2ZYtvzPK97OqF8lMo3QyX5ch0SQIDAQABAoIBADJeFZKVrrozcmDK
+    IPNszUPeniUvBa6g7wXp0Bp9hr4VQjBfCVt+6d2LbV8RClrNANu8G6IzlB3b7OTV
+    goq0ww4uZsYhUBUBQpFojP0CDDQnK8vjFWuq8oGwKMhrnmja9FnjomfvKvkp+WQW
+    uFxvkP3OastCYF744zofc4U0vEfSZsQKo2j0baIDrHvt4Y82GjgeI9Fe5v8PqaD4
+    qEP3oig+rBnemuv9JDOWSbTf7Lu1xYOnvuayqgUHroqliPN6vzN+6zQ6+W969Gvy
+    DQbDHdJjHMLlBkgXri3VnLEoz+ZYJlwqjqVA9cMx9usw3YwmwR4R7yUnc1rAOXqT
+    Nc0p/nECgYEAxh4UALY6aJaVSnnAvOK6///0T46Guf9NuYjLZFuk+Ouk4Dh/sX8w
+    nJu5BgjjX9qBhlCXaeD9TXAc1Dya1uf5cUBMhGlV+uuVLPL044yBIDMqR2Vpriut
+    8ATQNx47sJhDNfdfLu/5/aeV1YrMYM5XjXGzSsgoRUI7q1HTwNYvLwsCgYEAxYGb
+    4HfgPhYHY3Mew05n3cezVGhgoJtdhtCxGP85mmd6P96u7PKuQjFvYPTwokZFZUC9
+    NCJeVyVTOPKUqrhZP/TW0cTmcwKtik86xQHnVbFhYDlWONxOsjpawa3OYbePBMbu
+    t/aw5Zc61vYdQT+3WrBfA7nyX8RLyak6cqEGznsCgYADDZ+dSzGnPvraBPpVbuEW
+    5Ojs+PNWlnqqK1OHHmpyc5883WIKaD1ljHjTgPuQFJv+Z+uNdCwzL1EibDSurzCG
+    8Ei9man7jfnkkXH4t8edqWwzYXq5dm7dzhUvZEXjONWAVWmgHY6qvBRxEAyKSWPM
+    CD6NHnyQZK7quv4acLKVdQKBgQCAm6QX55dSdl+7R3Qpsz15Mhe5B/qbum+NYQlh
+    AJjOzUDSpDt9uYz1N2GSXgzvbhi0FRLfBt4tmvV1KKjb/gzH07Oqhq+VBpJgdLUN
+    Ie80YrvIv61Ae1yXO95rLbUs9i0f7DX3/qAz8GT1Iu/r1ASd/ijwsT19VMIQ/6w6
+    hlZ7TwKBgD0RTovQ84xf+/20utiq83tXINwasOlE4Wazvg64G48DZ+6UoSD/y9n3
+    DxmNyVfRWuLSNQJR4uLmC5PtjypP6tpz571sAgqjO+zx/ELPi1K+CcTdIi6kdB73
+    hEeT+W7ThBfs2NsKuvaGVnGiEjvpiXMbLKW06khIHoOk11AeSCmg
+    -----END RSA PRIVATE KEY-----
+  erikube_s3_container_name: erikube
+  s3_file_name: erikube-0.2.0-1207-x86_64.tgz
+
+  manager_external_ip_address: 131.160.200.109
+  manager_external_gateway: 131.160.200.1
+  manager_external_netmask: 255.255.255.0
+
+  #rhel7_iso_image_name: rhel-7-server.iso
+  #rhel7_iso_volume_size: '25'
+  #rhel7_extras_iso_image_name: rhel-x86_64-server-extras-7.iso
+  #rhel7_extras_iso_volume_size: '4'
+
+  #
+  # LB configs
+  #
+  loadbalancer_external_netmask: 255.255.255.0
+  loadbalancer_external_gateway: 131.160.200.1
+  loadbalancer_external_ip_address: 131.160.200.107
+
+resource_registry:
+  "K8S::Network": lib/network.yaml
+  "K8S::Manager": lib/manager.yaml
+  "K8S::SecGroup": lib/sec_group.yaml
+  "K8S::Node": lib/node.yaml
+  "K8S::Loadbalancer": lib/loadbalancer.yaml

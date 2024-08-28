@@ -1,0 +1,10 @@
+- name: nfs-gp
+  mountPath: /gp
+- name: pv-data
+  mountPath: /ericsson/tor/data
+- name: pv-mdt
+  mountPath: /etc/opt/ericsson/ERICmodeldeployment
+- name: pv-dumps
+  mountPath: /ericsson/enm/dumps
+- name: pv-configmgtupgind
+  mountPath: /ericsson/configuration_management/UpgradeIndependence

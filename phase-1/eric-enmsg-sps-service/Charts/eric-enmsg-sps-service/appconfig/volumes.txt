@@ -1,0 +1,28 @@
+- name: nfs-gp
+  configMap:
+    name: gpcloud
+- name: nfs-data
+  persistentVolumeClaim:
+    claimName: nfs-data
+- name: nfs-hcdumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps
+- name: nfs-mdt
+  persistentVolumeClaim:
+    claimName: nfs-mdt
+- name: nfs-home
+  persistentVolumeClaim:
+    claimName: nfs-home
+- name: nfs-custom
+  persistentVolumeClaim:
+    claimName: nfs-custom
+- name: nfs-dlms
+  persistentVolumeClaim:
+    claimName: nfs-dlms
+- name: nfs-ddcdata
+  persistentVolumeClaim:
+    claimName: nfs-ddcdata
+- name: sps-certs
+  emptyDir: {}
+- name: credm-certs
+  emptyDir: {}

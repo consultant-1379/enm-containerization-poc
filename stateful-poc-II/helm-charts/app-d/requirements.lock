@@ -1,0 +1,9 @@
+dependencies:
+- name: app-a
+  repository: file://../app-a
+  version: 0.1.0
+- name: app-c
+  repository: file://../app-c
+  version: 0.1.0
+digest: sha256:026bf3f886fd53fec0848af2f71718b0830ae0796f9ce9d11a6fd62d37442880
+generated: 2018-07-11T12:01:04.671002741Z

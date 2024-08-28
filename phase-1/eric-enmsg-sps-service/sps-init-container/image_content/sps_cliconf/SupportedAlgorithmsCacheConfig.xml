@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<instr xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:noNamespaceSchemaLocation="/opt/ericsson/ERICddc/util/etc/instr/schemas/instr.xsd">
+    <createdBy>DDC writeCacheInstr</createdBy>
+    <profile name="CacheSps">
+        <description></description>
+        <pollInterval>900</pollInterval>
+        <provider type="jmx" name="cache">
+            <ipService host="127.0.0.1" port="9999" protocol="remoting-jmx" creds=":" />
+
+            <metricGroup name="SupportedAlgorithmsCache-state"> <mbeanName>com.ericsson.oss.itpf.sdk.cache.infinispan:component=StateTransferManager,manager="SF_SDK_CACHE_infinispan_cache_manager",name="SupportedAlgorithmsCache(repl_sync)",type=Cache</mbeanName>
+                <metric name="stateTransferInProgress" />
+            </metricGroup>
+        </provider>
+    </profile>
+</instr>

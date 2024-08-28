@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: efs-provisioner
+data:
+  file.system.id: fs-88eade41
+  aws.region: eu-west-1
+  provisioner.name: example.com/aws-efs

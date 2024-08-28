@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: msfm-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: a3566d6fdd21111e8b33b1260677f485-842241683.us-east-1.elb.amazonaws.com
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: msfm
+          servicePort: 4569

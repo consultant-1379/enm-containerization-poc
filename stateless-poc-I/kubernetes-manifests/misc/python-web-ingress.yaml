@@ -1,0 +1,20 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: python-web-ingress
+#  annotations:
+#    nginx.ingress.kubernetes.io/rewrite-target: /
+#    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  rules:
+  - host: httpd-deployment-9bdc8c56c-hjx82
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: haproxy
+          servicePort: 80
+#  tls:
+#  - hosts:
+#    - httpd-deployment-9bdc8c56c-hjx82
+##    secretName: python-secret 

@@ -1,0 +1,7 @@
+NAME=eric-enmsg-supervisionclient
+DEP=true
+REQUESTS=true
+REQUESTS_LIST=2Gi
+WAIT=true
+WAIT_LIST=gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps
+SVC=supervc

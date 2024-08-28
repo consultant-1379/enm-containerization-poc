@@ -1,0 +1,6 @@
+This is eric-enmsg-pmic-router-policy Helm Installation!
+Your chart has been successfully released.
+
+To check it's state, run:
+
+  helm status {{.Release.Name}}

@@ -1,0 +1,87 @@
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+
+images:
+  stateless-integration:
+    name: eric-enmsg-modelserv
+    tag: test
+    command: "[ '/bin/sh', '-c', 'rm -f /etc/localtime;bash /var/tmp/invoke_mdt_post_install.sh;' ]"
+
+imageCredentials:
+  repoPath: proj_oss_releases/enm
+  pullPolicy: Always
+  registry:
+    url:
+    pullSecret:
+
+#Enable software to be included.
+eric-enmsg-access-control:
+  enabled: true
+
+eric-enmsg-cmservice:
+  enabled: true
+
+eric-enmsg-eventbasedclient:
+  enabled: true
+
+eric-enmsg-flsserv:
+  enabled: true
+
+eric-enmsg-fm-alarm-processing:
+  enabled: true
+
+eric-enmsg-fm-service:
+  enabled: true
+
+eric-enmsg-ha-proxy:
+  enabled: true
+
+eric-enmsg-httpd:
+  enabled: true
+
+eric-enmsg-lcmservice:
+  enabled: true
+
+eric-enmsg-medrouter:
+  enabled: true
+
+eric-enmsg-mscm:
+  enabled: true
+
+eric-enmsg-msfm:
+  enabled: true
+
+eric-enmsg-mspm:
+  enabled: true
+
+eric-enmsg-networkexplorer:
+  enabled: true
+
+eric-enmsg-openidm:
+  enabled: true
+
+eric-enmsg-pki-ra-service:
+  enabled: true
+
+eric-enmsg-pmic-router-policy:
+  enabled: true
+
+eric-enmsg-pmservice:
+  enabled: true
+
+eric-enmsg-security-service:
+  enabled: true
+
+eric-enmsg-sps-service:
+  enabled: true
+
+eric-enmsg-sso:
+  enabled: true
+
+eric-enmsg-uiservice:
+  enabled: true
+
+eric-enmsg-web-push-service:
+  enabled: true

@@ -1,0 +1,13 @@
+FROM registry.access.redhat.com/rhel7/rhel
+RUN     mkdir -p /usr/java/default && \
+                touch /etc/yum.repos.d/cifwk.repo && \
+                touch /etc/yum.repos.d/rhel.repo && \
+                touch /etc/yum.repos.d/patches.repo && \
+                echo -e "[cifwkrepo]\nname=Cifwk Repository\nbaseurl=https://cifwk-oss.lmera.ericsson.se/static/staticRepos/ENM/latest\nenabled=1\ngpgcheck=0" >> /etc/yum.repos.d/cifwk.repo && \
+                echo -e "[rhelrepo]\nname=RHEL Repository\nbaseurl=https://cifwk-oss.lmera.ericsson.se/static/staticRepos/RHEL6.6_OS_DVD/latest\nenabled=1\ngpgcheck=0" >> /etc/yum.repos.d/patches.repo && \
+                echo -e "[patchesrepo]\nname=RHEL Patches Repository\nbaseurl=https://cifwk-oss.lmera.ericsson.se/static/staticRepos/RHEL6.6_OS_Patch_Set/latest\nenabled=1\ngpgcheck=0" >> /etc/yum.repos.d/patches.repo
+RUN yum remove -y lvm
+#RUN yum install -y tar.x86_64 lvm2.x86_64
+RUN yum install -y tar.x86_64
+RUN yum install -y bind-utils
+

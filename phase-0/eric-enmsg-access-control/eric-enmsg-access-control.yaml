@@ -1,0 +1,166 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: accesscontrol
+spec:
+  ports:
+    - name: jboss
+      port: 8080
+      targetPort: 8080
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: accesscontrol
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: accesscontrol-deployment
+spec:
+  selector:
+    matchLabels:
+      app: accesscontrol
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: accesscontrol
+    spec:
+      initContainers:
+      - name: service-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps -n default'
+      containers:
+      - name: accesscontrol
+        resources:
+          requests:
+            memory: "3Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-access-control
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 22
+          - containerPort: 56450
+          - containerPort: 56453
+          - containerPort: 56422
+          - containerPort: 9990
+          - containerPort: 46055
+          - containerPort: 56456
+          - containerPort: 57193
+          - containerPort: 8009
+          - containerPort: 63178
+          - containerPort: 58156
+          - containerPort: 56430
+          - containerPort: 55631
+          - containerPort: 9999
+          - containerPort: 8080
+          - containerPort: 56433
+          - containerPort: 63218
+          - containerPort: 56403
+          - containerPort: 54200
+          - containerPort: 56409
+          - containerPort: 8090
+          - containerPort: 8091
+          - containerPort: 63228
+          - containerPort: 8092
+          - containerPort: 8093
+          - containerPort: 56415
+          - containerPort: 4447
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/accesscontrol_config.sh; while true; do sleep 300; done
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-pmul
+            mountPath: /ericsson/ul_spectrum_files
+          - name: nfs-smrs
+            mountPath: /ericsson/tor/smrs
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-shared
+            mountPath: /ericsson/home
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: nfs-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: nfs-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: nfs-pmic1
+            mountPath: /ericsson/pmic1
+          - name: nfs-pmic2
+            mountPath: /ericsson/pmic2
+          - name: nfs-pmlinks
+            mountPath: /ericsson/symvol
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-pmul
+          persistentVolumeClaim:
+            claimName: nfs-pmul
+        - name: nfs-smrs
+          persistentVolumeClaim:
+            claimName: nfs-smrs
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-configmgt
+          persistentVolumeClaim:
+            claimName: nfs-configmgt
+        - name: nfs-shared
+          persistentVolumeClaim:
+            claimName: nfs-home
+        - name: nfs-upgind
+          persistentVolumeClaim:
+            claimName: nfs-upgind
+        - name: nfs-pmic1
+          persistentVolumeClaim:
+            claimName: nfs-pm1
+        - name: nfs-pmic2
+          persistentVolumeClaim:
+            claimName: nfs-pm2
+        - name: nfs-pmlinks
+          persistentVolumeClaim:
+            claimName: nfs-pmlinks

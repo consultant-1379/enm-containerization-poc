@@ -1,0 +1,3 @@
+version: "2"
+domain: lvsingress.ericsson.com
+repo: gerrit.ericsson.se/oss/com.ericsson.oss.containerisation/enm-container-poc/gocode/customcontrollers/lvsingress

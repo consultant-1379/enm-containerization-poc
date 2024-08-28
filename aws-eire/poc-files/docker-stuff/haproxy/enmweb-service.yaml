@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: enmweb
+  annotations:
+    #service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+    #service.beta.kubernetes.io/aws-load-balancer-backend-protocol: (https|http|ssl|tcp)
+    service.beta.kubernetes.io/aws-load-balancer-backend-protocol: https
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert: arn:aws:acm:us-east-1:213418823860:certificate/17b3d62b-5730-4b21-8495-f88322b07334
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 80
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: httpd
+  type: LoadBalancer

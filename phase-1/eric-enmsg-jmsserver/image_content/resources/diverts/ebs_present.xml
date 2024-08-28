@@ -1,0 +1,14 @@
+<diverts xmlns="urn:jboss:domain:messaging:1.4">
+    <divert name="Ebs-CellTrace-file-collection-divert">
+        <address>jms.topic.FileCollectionResultNotificationTopic</address>
+        <forwarding-address>jms.queue.EbsCellTraceFileCollectionEventDivertQueue</forwarding-address>
+        <filter string="subscriptionType='CELLTRACE' AND (neType='ERBS' OR neType='RadioNode' OR neType='MSRBS_V1')" />
+        <exclusive>false</exclusive>
+    </divert>
+    <divert name="Mme-Ebm-file-collection-divert">
+        <address>jms.topic.FileCollectionResultNotificationTopic</address>
+        <forwarding-address>jms.queue.MmeEbmFileCollectionEventDivertQueue</forwarding-address>
+        <filter string="neType='SGSN-MME' AND subscriptionType='EBM'" />
+        <exclusive>false</exclusive>
+    </divert>
+</diverts>

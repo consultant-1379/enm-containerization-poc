@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: models
+spec:
+  selector:
+    matchLabels:
+      app: models
+  serviceName: models
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: models
+    spec:
+      containers:
+      - name: models
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:models-rhel6basejava8
+        imagePullPolicy: Always
+#        livenessProbe:
+#          httpGet:
+#            port: 12987
+#          initialDelaySeconds: 300
+#          timeoutSeconds: 10
+#          periodSeconds: 30
+#          failureThreshold: 2
+        resources:
+          limits:
+            memory: "10Gi"
+        ports:
+          - containerPort: 34371
+          - containerPort: 36869
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/models_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-ddc-data
+            mountPath: /var/ericsson/ddc_data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-configmgtupgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+#          - name: models-jar
+#            mountPath: /var/opt/ericsson/ERICmodeldeployment
+#          - name: models-tmp
+#            mountPath: /ericsson/tmp
+#          - name: models
+#            mountPath: /ericsson/models
+      volumes:
+        - name: pv-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-ddc-data
+          persistentVolumeClaim:
+            claimName: ddc-data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-configmgtupgind
+          persistentVolumeClaim:
+            claimName: config-mgt-upgind
+#  volumeClaimTemplates:
+#    - metadata:
+#        name: models-jar
+#      spec:
+#        storageClassName: "gp2"
+#        accessModes:
+#          - ReadWriteOnce
+#        resources:
+#          requests:
+#            storage: 2Gi
+#    - metadata:
+#        name: models
+#      spec:
+#        storageClassName: "gp2"
+#        accessModes:
+#          - ReadWriteOnce
+#        resources:
+#          requests:
+#            storage: 1Gi
+#    - metadata:
+#        name: models-tmp
+#      spec:
+#        storageClassName: "gp2"
+#        accessModes:
+#          - ReadWriteOnce
+#        resources:
+#          requests:
+#            storage: 12Gi

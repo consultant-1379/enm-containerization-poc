@@ -1,0 +1,5 @@
+[rhel_patches]
+name=RHEL Patches Repository
+baseurl=https://d13h60r5ikn7wu.cloudfront.net/RHEL/RHEL6-2.1.2
+enabled=1
+gpgcheck=0

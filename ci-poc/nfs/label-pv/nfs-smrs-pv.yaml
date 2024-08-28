@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    enmnfs: "nfs-smrs"
+  name: nfs-smrs
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 131.160.142.101
+    path: "/ericsson/smrs"
+  persistentVolumeReclaimPolicy: Retain

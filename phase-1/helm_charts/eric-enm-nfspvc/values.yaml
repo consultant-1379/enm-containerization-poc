@@ -1,0 +1,33 @@
+## eric-enm-nfspvc image version
+
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+  replicas-eric-enm-nfspvc: 1
+  ingress:
+    enmhost:
+  nfs:
+    storageClass: nfs-enm13
+    alexSize: 1Gi
+    amosSize: 1Gi
+    batchSize: 4Gi
+    configmgtSize: 5Gi
+    cronSize: 1Gi
+    customSize: 1Gi
+    dataSize: 20Gi
+    ddcdataSize: 5Gi
+    dlmsSize: 5Gi
+    hcdumpsSize: 10Gi
+    homeSize: 20Gi
+    mdtSize: 10Gi
+    netlogSize: 2Gi
+    norollbackSize: 5Gi
+    pm1Size: 5Gi
+    pm2Size: 5Gi
+    pmlinksSize: 5Gi
+    pmulSize: 1Gi
+    sdnSize: 1Gi
+    smrsSize: 5Gi
+    tfdSize: 10Gi
+    upgindSize: 4Gi

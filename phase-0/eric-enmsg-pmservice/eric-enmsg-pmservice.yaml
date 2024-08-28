@@ -1,0 +1,194 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: pmserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pmserv
+    spec:
+      initContainers:
+      - name: service-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps -n default'
+      containers:
+      - name: pmserv
+        resources:
+          requests:
+            memory: "6Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-pmservice
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 35020
+          - containerPort: 55200
+          - containerPort: 42628
+          - containerPort: 47460
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 4447
+          - containerPort: 9999
+          - containerPort: 56164
+          - containerPort: 3528
+          - containerPort: 58156
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 55501
+          - containerPort: 55500
+          - containerPort: 35020
+          - containerPort: 44004
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009
+          - containerPort: 58156
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 46000
+          - containerPort: 55601
+          - containerPort: 46002
+          - containerPort: 58171
+          - containerPort: 63165
+          - containerPort: 63166
+          - containerPort: 56162
+          - containerPort: 56163
+          - containerPort: 30200
+          - containerPort: 50559
+          - containerPort: 55181
+          - containerPort: 55200
+          - containerPort: 5445
+          - containerPort: 5455
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/pmserv_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-netlog
+            mountPath: /ericsson/netlog
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/no_rollback
+          - name: nfs-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: nfs-pm1
+            mountPath: /ericsson/pmic1
+          - name: nfs-pm2
+            mountPath: /ericsson/pmic2
+          - name: nfs-pmlinks
+            mountPath: /ericsson/symvol
+          - name: nfs-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: nfs-ddcdata
+            mountPath: /var/ericsson/ddc_data
+          - name: nfs-smrs
+            mountPath: /ericsson/tor/smrs
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-configmgt
+          persistentVolumeClaim:
+            claimName: nfs-configmgt
+        - name: nfs-pm1
+          persistentVolumeClaim:
+            claimName: nfs-pm1
+        - name: nfs-pm2
+          persistentVolumeClaim:
+            claimName: nfs-pm2
+        - name: nfs-pmlinks
+          persistentVolumeClaim:
+            claimName: nfs-pmlinks
+        - name: nfs-upgind
+          persistentVolumeClaim:
+            claimName: nfs-upgind
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-netlog
+          persistentVolumeClaim:
+            claimName: nfs-netlog
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-ddcdata
+          persistentVolumeClaim:
+            claimName: nfs-ddcdata
+        - name: nfs-smrs
+          persistentVolumeClaim:
+            claimName: nfs-smrs
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: pmserv
+spec:
+  ports:
+    - name: jboss
+      port: 8080
+      targetPort: 8080
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: pmserv

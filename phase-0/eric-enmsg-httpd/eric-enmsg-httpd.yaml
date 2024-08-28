@@ -1,0 +1,156 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-deployment
+spec:
+  selector:
+    matchLabels:
+      app: httpd
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: httpd
+    spec:
+      initContainers:
+      - name: httpd-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s sps,sso -n default'
+      containers:
+      - name: httpd
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-httpd
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 22
+          - containerPort: 123
+          - containerPort: 8666
+          - containerPort: 4447
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/httpd_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-smrs
+            mountPath: /ericsson/tor/smrs
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-shared
+            mountPath: /ericsson/home
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: nfs-alex
+            mountPath: /ericsson/enm/alex
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-smrs
+          persistentVolumeClaim:
+            claimName: nfs-smrs
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-alex
+          persistentVolumeClaim:
+            claimName: nfs-alex
+        - name: nfs-shared
+          persistentVolumeClaim:
+            claimName: nfs-home
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+    - name: modcluster
+      port: 8666
+      targetPort: 8666
+  selector:
+    app: httpd
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: httpd-instance-1
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+    - name: modcluster
+      port: 8666
+      targetPort: 8666
+  selector:
+    app: httpd
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: httpd
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  rules:
+  - host: enm-phase-0.athtem.eei.ericsson.se
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: httpd
+          servicePort: 443
+  tls:
+  - hosts:
+    - enm-phase-0.athtem.eei.ericsson.se

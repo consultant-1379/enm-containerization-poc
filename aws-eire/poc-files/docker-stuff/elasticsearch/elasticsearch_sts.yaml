@@ -1,0 +1,89 @@
+kind: StatefulSet
+apiVersion: apps/v1beta1
+metadata:
+  name: elasticsearch
+spec:
+  replicas: 1
+  serviceName: elasticsearch
+  template:
+    metadata:
+      labels:
+        component: elasticsearch
+        role: compact
+      annotations:
+        pod.beta.kubernetes.io/init-containers: '[
+          {
+            "name": "sysctl",
+            "image": "busybox",
+            "imagePullPolicy": "IfNotPresent",
+            "command": ["sysctl", "-w", "vm.max_map_count=262144"],
+            "securityContext": {
+              "privileged": true
+            }
+          }
+        ]'
+    spec:
+      securityContext:
+        fsGroup: 1000
+      containers:
+      - name: elasticsearch
+        securityContext:
+          privileged: true
+          capabilities:
+            add:
+              - IPC_LOCK
+        resources:
+          limits:
+            memory: 1Gi
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:elasticsearch
+        imagePullPolicy: Always
+        env:
+        - name: NAMESPACE
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.namespace
+        - name: NODE_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ES_ENV_CN
+          value: cluster.name=elasticsearch
+        - name: ES_ENV_NN
+          value: node.name=$(NODE_NAME)
+        - name: ES_ENV_NM
+          value: node.master=true
+        - name: ES_ENV_HE
+          value: http.enabled=true
+        - name: ES_ENV_ND
+          value: node.data=true
+        - name: ES_ENV_ZH
+          value: discovery.zen.ping.unicast.hosts=elasticsearch
+        - name: ES_ENV_ZM
+          value: discovery.zen.minimum_master_nodes=1
+        - name: ES_ENV_NI
+          value: node.max_local_storage_nodes=1
+        - name: ES_ENV_BM
+          value: bootstrap.memory_lock=false
+        - name: ES_JAVA_OPTS
+          value: -Xms512m -Xmx512m
+        ports:
+        - name: http
+          containerPort: 9200
+          protocol: TCP
+        - name: transport
+          containerPort: 9300
+          protocol: TCP
+        volumeMounts:
+        - name: data
+          mountPath: /opt/elasticsearch/data
+
+  volumeClaimTemplates:
+  - metadata:
+      name: data
+      annotations:
+        volume.beta.kubernetes.io/storage-class: "gp2"
+    spec:
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 1Gi

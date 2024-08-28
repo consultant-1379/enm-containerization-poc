@@ -1,0 +1,7 @@
+NAME=eric-enmsg-opendj
+STS=true
+PERSIST=true
+PERSIST_LIST=ReadWriteOnce,2Gi,/ericsson/opendj
+SVC=opendj
+EXTRASVC=true
+ESVC_LIST=ldap-local,ldap-remote

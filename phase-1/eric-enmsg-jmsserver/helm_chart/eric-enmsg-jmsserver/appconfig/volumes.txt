@@ -1,0 +1,7 @@
+- name: nfs-dumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps
+- name: nfs-data
+  persistentVolumeClaim:
+    claimName: nfs-data
+#    storageClass: "nfs-enm14"

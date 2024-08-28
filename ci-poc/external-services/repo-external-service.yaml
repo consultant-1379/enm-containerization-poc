@@ -1,0 +1,7 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: repo
+spec:
+  type: ExternalName
+  externalName: repo.service.enm

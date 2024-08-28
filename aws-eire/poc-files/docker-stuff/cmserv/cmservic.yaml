@@ -1,0 +1,184 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cmserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: cmserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cmserv
+    spec:
+    initContainers:
+      - name: initpostgresdbconfig
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:rhel6basejava8ic
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'yum install -y ERICcmconfigservicedb_CXP9031954 && yum install -y postgresql92-postgresql && cd /opt/ericsson/ERICcmconfigservicedb_CXP9031954/; wget http://repo/enm/new_install_config_service_db.sh && bash /opt/ericsson/ERICcmconfigservicedb_CXP9031954/new_install_config_service_db.sh '
+        volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+    containers:
+      - name: cmserv
+        resources:
+          requests:
+            memory: "6Gi"
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:cmserv-rhel6jbossjava8
+        imagePullPolicy: Always
+#        livenessProbe:
+#          httpGet:
+#            port: 12987
+#          initialDelaySeconds: 300
+#          timeoutSeconds: 10
+#          periodSeconds: 30
+#          failureThreshold: 2
+        ports:
+          - containerPort: 35020
+          - containerPort: 55200
+          - containerPort: 42628
+          - containerPort: 47460
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 4447
+          - containerPort: 9999
+          - containerPort: 56164
+          - containerPort: 3528
+          - containerPort: 58156
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 55501
+          - containerPort: 55500
+          - containerPort: 35020
+          - containerPort: 44004
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009
+          - containerPort: 58156
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 46000
+          - containerPort: 55601
+          - containerPort: 46002
+          - containerPort: 58171
+          - containerPort: 63165
+          - containerPort: 63166
+          - containerPort: 56162
+          - containerPort: 56163
+          - containerPort: 30200
+          - containerPort: 50559
+          - containerPort: 55181
+          - containerPort: 55200
+          - containerPort: 5445
+          - containerPort: 5455
+        command: ["/bin/sh", "-c"]
+        args:
+          - echo "hello"; while true; do sleep 300;done;
+          volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-netlog
+            mountPath: /ericsson/netlog
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-pm1
+            mountPath: /ericsson/pmic1
+          - name: pv-pm2
+            mountPath: /ericsson/pmic2
+          - name: pv-pmlinks
+            mountPath: /ericsson/symvol
+          - name: pv-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: pv-ddcdata
+            mountPath: /var/ericsson/ddc_data
+          - name: pv-smrs
+            mountPath: /ericsson/tor/smrs
+      volumes:
+        - name: pv-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-pm1
+          persistentVolumeClaim:
+            claimName: pmic1
+        - name: pv-pm2
+          persistentVolumeClaim:
+            claimName: pmic2
+        - name: pv-pmlinks
+          persistentVolumeClaim:
+            claimName: pmlinks
+        - name: pv-upgind
+          persistentVolumeClaim:
+            claimName: upgind
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-netlog
+          persistentVolumeClaim:
+            claimName: netlog
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-ddcdata
+          persistentVolumeClaim:
+            claimName: ddcdata
+        - name: pv-smrs
+          persistentVolumeClaim:
+            claimName: smrs
+

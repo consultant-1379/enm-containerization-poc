@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: nginx-config
+  labels:
+    {{- include "nginx-ingress.labels" . | nindent 4 }}
+data:
+{{- if .Values.controller.config.entries }}
+{{ toYaml .Values.controller.config.entries | indent 2 }}
+{{- end }}
+   stream-snippets: |
+{{- range $key, $value := .Values.tcp }}
+     upstream {{ $key }}-tcp {
+        {{ $value.lb }};
+        server {{ $value.service }};
+     }
+ 
+     server {
+        listen {{ $value.cport }};
+        proxy_pass {{ $key }}-tcp;
+     }
+
+{{- end }}

@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgres
+spec:
+  type: ExternalName
+  externalName: postgres.service.enm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: postgresql01
+spec:
+  type: ExternalName
+  externalName: postgresql01.service.enm

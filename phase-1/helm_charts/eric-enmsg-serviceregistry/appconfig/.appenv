@@ -1,0 +1,7 @@
+NAME=eric-enmsg-serviceregistry
+STS=true
+SVC=consul
+CM=true
+MOUNTPOINT=/ericsson/consul/config
+PERSIST=true
+PERSIST_LIST=ReadWriteOnce,1Gi,/ericsson/data

@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sso-instance-1
+spec:
+  rules:
+  - host: sso-instance-1.enmk8s.athtem.eei.ericsson.se
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sso
+          servicePort: 8080
+  tls:
+  - hosts:
+    - sso-instance-1.enmk8s.athtem.eei.ericsson.se

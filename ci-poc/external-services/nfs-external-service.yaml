@@ -1,0 +1,24 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfsdata
+spec:
+  type: ExternalName
+  externalName: nfsdata.service.enm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfsmdt
+spec:
+  type: ExternalName
+  externalName: nfsmdt.service.enm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfshcdumps
+spec:
+  type: ExternalName
+  externalName: nfshcdumps.service.enm
+

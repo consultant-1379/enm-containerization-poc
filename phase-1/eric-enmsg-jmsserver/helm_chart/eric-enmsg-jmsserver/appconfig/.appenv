@@ -1,0 +1,7 @@
+STS=true
+NAME=eric-enmsg-jmsserver
+SVC=jms
+EXTRASVC=true
+ESVC_LIST=jms01
+PERSIST=true
+PERSIST_LIST=ReadWriteOnce,2Gi,/ericsson/jms

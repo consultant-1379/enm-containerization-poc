@@ -1,0 +1,9 @@
+- containerPort: 22
+- containerPort: 36698
+- containerPort: 8085
+- containerPort: 52595
+- containerPort: 40728
+- containerPort: 12987
+- containerPort: 8445
+- containerPort: 8446
+- containerPort: 37247

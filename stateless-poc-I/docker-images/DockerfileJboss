@@ -1,0 +1,8 @@
+FROM dockerregistry:5000/rhel6
+
+MAINTAINER Abdul
+
+RUN groupadd -r jboss && useradd --no-log-init -r -g jboss jboss_user
+RUN yum install -y EXTRjboss_CXP9031339.noarch nc vim
+
+

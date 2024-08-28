@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: enmaas-lb
+  annotations:
+    #service.beta.kubernetes.io/aws-load-balancer-proxy-protocol: "*"
+    #service.beta.kubernetes.io/aws-load-balancer-backend-protocol: (https|http|ssl|tcp)
+    service.beta.kubernetes.io/aws-load-balancer-ssl-cert:  arn:aws:acm:eu-west-1:152254703525:certificate/44fcfcc5-fa65-4c09-b7fc-c6a96ff28788
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 80
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: httpd-brian
+  type: LoadBalancer

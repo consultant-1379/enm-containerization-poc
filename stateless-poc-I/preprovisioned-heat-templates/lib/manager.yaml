@@ -1,0 +1,483 @@
+heat_template_version: 2015-04-30
+description: >
+  Erikube manager host
+
+  Hosts
+  - Ansible,
+  - local Yum mirror,
+  - local Docker registry
+
+parameters:
+  ansible_public_key:
+    type: string
+    description: SSH public key
+  ansible_private_key:
+    type: string
+    description: SSH private key
+  username:
+    type: string
+    description: username of the user
+    default: jedi
+
+  erikube_timezone:
+    type: string
+    default: UTC
+  manager_external_interface:
+    type: string
+    default: "eth1"
+  manager_external_netmask:
+    type: string
+  manager_external_gateway:
+    type: string
+  manager_external_ip_address:
+    type: string
+
+  manager_internal_interface:
+    type: string
+    default: "eth0"
+
+  security_group_name:
+    type: string
+
+  key_name:
+    type: string
+    description: Name of keypair to assign to servers
+  external_network:
+    type: string
+    description: uuid/name of a network to use for floating ip addresses
+  image_name:
+    type: string
+    description: glance image used to boot the ansible VM (centos7)
+  flavor:
+    type: string
+    description: flavor to use when booting the server
+  #dns_nameserver:
+  #  type: string
+  #  description: address of a dns nameserver reachable in your environment
+  #  default: 8.8.8.8
+  internal_network:
+    type: string
+    description: network range for cluster ip network
+  #internal_network_cidr:
+  #  type: string
+  #  description: network range for cluster ip network
+  #  default: 10.10.0.0/24
+  #secgroup_base:
+  #  type: string
+  #  description: network range for cluster ip network
+  #remote_ip_range:
+  #  type: string
+  #  description: ip range from where ansible can be accessed
+  os_password:
+    type: string
+    description: Password that may be used for downloading erikube data for S3
+    hidden: true
+  os_user:
+    type: string
+    description: User that will be used to fetch
+  os_url:
+    type: string
+    description: Openstack public URL (i.e os.example.com)
+  os_project:
+    type: string
+    description: Name of user project
+  s3_file_name:
+     type: string
+     description: Filename of S3 object (without .tar at the end)
+  ansible_user_name:
+     type: string
+     description: Name of user that runs ansible-playbooks
+     default: jedi
+  erikube_s3_container_name:
+     type: string
+     description: The location of files to be downloaded
+  use_config_drive:
+    default: true
+    type: boolean
+
+  minions_ip:
+    type: comma_delimited_list
+
+  master_ip:
+    type: string
+
+  lb_ip:
+    type: string
+
+  lb_external_ip:
+    type: string
+
+resources:
+  cloud_config:
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        debug:
+          verbose: true
+        system_info:
+          default_user:
+            name: {get_param: username}
+            lock_passwd: true
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+            gecos: Kubernetes Interactive User
+            groups: [wheel, adm, systemd-journal]
+        timezone:
+          str_replace:
+            params:
+              $timezone: {get_param: erikube_timezone}
+            template: $timezone
+        yum_repos:
+          Kubernetes:
+            name: Kubernetes
+            baseurl: https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+            enabled: true
+            gpgcheck: true
+            repo_gpgcheck: true
+            gpgkey: https://packages.cloud.google.com/yum/doc/yum-key.gpg https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+        write_files:
+          - path: /etc/sysctl.conf
+            owner: root:root
+            permissions: 644
+            content: |
+              net.ipv4.ip_forward = 1
+        runcmd:
+          - [setenforce, 0]
+          - [sysctl, -p]
+          - [sed, -i, '/^SELINUX=/ s/=.*/=disabled/', /etc/selinux/config]
+          - [iptables, -t, nat, -A, POSTROUTING, -o, eth1, -j, MASQUERADE]
+          - [iptables, --append, FORWARD, --in-interface, eth0, -j, ACCEPT]
+          - ['iptables-save > /etc/sysconfig/iptables']
+          - [systemctl, enable, nfs]
+          - [systemctl, start, nfs]
+          - [sed, -i, '/^STORAGE_DRIVER=/ s/=.*/=overlay/', /usr/share/container-storage-setup/container-storage-setup]
+          - [systemctl, enable, docker]
+          - [systemctl, start, docker]
+
+  add_keys:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          params:
+            $username: {get_param: username}
+            $private_key: {get_param: ansible_private_key}
+            $public_key: {get_param: ansible_public_key}
+          template: |
+            #!/usr/bin/env bash
+            set -ex
+            su - $username << EOF
+            echo "$public_key" > .ssh/id_rsa.pub
+            chmod 644 .ssh/id_rsa.pub
+            echo "$private_key" > .ssh/id_rsa
+            chmod 600 .ssh/id_rsa
+            EOF
+
+  #wait_handle:
+  #  type: OS::Heat::WaitConditionHandle
+  #wait_condition:
+  #  type: OS::Heat::WaitCondition
+  #  properties:
+  #    count: 1
+  #    handle: {get_resource: wait_handle}
+  #    timeout: 1800
+
+  ansible_config:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: cloud_config}
+      - config: {get_resource: add_keys}
+      - config: {get_resource: manager_user_data}
+        type: multipart
+
+  manager:
+    type: OS::Nova::Server
+    properties:
+     config_drive: {get_param: use_config_drive}
+     image: {get_param: image_name}
+     flavor: {get_param: flavor}
+     key_name: {get_param: key_name}
+     networks:
+       - port: {get_resource: ansible_eth0}
+       - port: {get_resource: ansible_eth1}
+     name: erikube-ansible
+     user_data_format: RAW
+     user_data: {get_resource: ansible_config}
+
+  ansible_eth0:
+    type: OS::Neutron::Port
+    properties:
+     network: {get_param: internal_network}
+     allowed_address_pairs:
+      - ip_address: 0.0.0.0/0
+     security_groups:
+      - get_param: security_group_name
+     fixed_ips:
+      - ip_address: "10.10.10.10"
+
+  ansible_eth1:
+    type: OS::Neutron::Port
+    properties:
+     network: {get_param: external_network}
+     allowed_address_pairs:
+      - ip_address: 0.0.0.0/0
+     security_groups:
+      - get_param: security_group_name
+     fixed_ips:
+      - ip_address:
+          get_param: manager_external_ip_address
+
+  manager_user_data:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config:
+          str_replace:
+            params:
+              _ADDRESSIPV6_: ''
+              _ADDRESS_:
+                get_param: manager_external_ip_address
+              _GATEWAYIPV6_: ''
+              _GATEWAY_:
+                get_param: manager_external_gateway
+              _INTERFACE_:
+                get_param: manager_external_interface
+              _NETMASK_:
+                get_param: manager_external_netmask
+            template: |
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              write_files:
+                - path: /run/cloud-init/1_03_plumb_ip_address_eth1.sh
+                  owner: root:root
+                  permissions: '0777'
+                  content : |
+                    #!/bin/bash
+                    log_directory=/var/log
+                    (
+                    # Plumbs up the ethernet interface
+                    echo "Plumbing Interface _INTERFACE_"
+
+                    # Remove parameters
+                    sed -i '/BOOTPROTO=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                    sed -i '/NETMASK=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                    sed -i '/IPADDR=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                    sed -i '/GATEWAY=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+
+                    echo 'BOOTPROTO=none' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    echo 'NETMASK=_NETMASK_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    echo 'IPADDR=_ADDRESS_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    echo 'GATEWAY=_GATEWAY_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+
+                    # plumb ipv6 address if it is present
+                    if ! [ -z '_ADDRESSIPV6_' ]; then
+                      # Remove parameters
+                      sed -i '/IPV6INIT=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                      sed -i '/IPV6ADDR=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                      sed -i '/IPV6_DEFAULTGW=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                      echo 'IPV6INIT=yes' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                      echo 'IPV6ADDR=_ADDRESSIPV6_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                      echo 'IPV6_DEFAULTGW=_GATEWAYIPV6_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    fi
+
+                    ifdown _INTERFACE_
+                    ifup /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    interfaceUp=$( ifconfig | grep _INTERFACE_ )
+                    if [[ ${interfaceUp} == "" ]]; then
+                      echo "ERROR: Issue bring up the interface: _INTERFACE_"
+                    fi
+
+                    # XXX(emiligo) This is hack until cloud provider subnet starts issueing correct nameservers
+                    cat > /etc/resolv.conf <<RES
+                    domain athtem.eei.ericsson.se
+                    nameserver 159.107.173.12
+                    nameserver 159.107.173.3
+                    RES
+                    ) > ${log_directory}/1_03_plumb_ip_address_eth1.log 2>&1 &
+                    # wait for the sub-task to finish and print elapsed time
+                    time wait
+              runcmd:
+                - /run/cloud-init/1_03_plumb_ip_address_eth1.sh
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          write_files:
+            - path: /run/cloud-init/1_08_ansible_setup.sh
+              owner: root:root
+              permissions: '0777'
+              content : |
+                 #!/bin/sh
+
+                 # docker
+                 yum -y install docker device-mapper-libs device-mapper-event-libs python-docker-py
+
+                 # ansible
+                 yum install -y epel-release
+                 yum install -y gcc python-devel python-pip
+                 yum install -y ansible-2.4.2.0 crudini
+                 crudini --set /etc/ansible/ansible.cfg defaults host_key_checking False
+
+                 # dev utils
+                 yum install -y unzip git
+                 # kubectl, helm
+                 yum install -y kubectl
+                 
+                 # Helm install
+                 curl -L -O -C - https://storage.googleapis.com/kubernetes-helm/helm-v2.6.2-linux-amd64.tar.gz
+                 tar -zxvf helm-v2.6.2-linux-amd64.tar.gz
+                 mv linux-amd64/helm /usr/local/bin/helm
+                 rm -rf linux-amd64/  
+                 
+                 # swift client
+                 pip install --upgrade pip
+                 pip install setuptools
+                 pip install python-openstackclient
+                 pip install python-keystoneclient python-swiftclient
+          runcmd:
+            - /run/cloud-init/1_08_ansible_setup.sh
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          write_files:
+            - content: |
+                  # /etc/sysconfig/docker
+                  # Modify these options if you want to change the way the docker daemon runs
+                  # Erikube Specific: With the kernel we have doesn't work checked
+                  # OPTIONS='--selinux-enabled'
+                  DOCKER_CERT_PATH=/etc/docker
+                  ADD_REGISTRY='--add-registry registry.access.redhat.com'
+              path: /etc/sysconfig/docker
+              permissions: '0644'
+      - config:
+          str_replace:
+            params:
+              _MASTER_IP_: {get_param: master_ip}
+              _LB_IP_: {get_param: lb_ip}
+              _LB_EXTERNAL_IP_: {get_param: lb_external_ip}
+              _MINIONS_IP_: {list_join: [' ', {get_param: [minions_ip]}]}
+              _USER_NAME_: {get_param: username}
+            template: |
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              write_files:
+                - path: /run/cloud-init/2_90_setup_ansible_host.sh
+                  owner: 'root:root'
+                  permissions: '0755'
+                  content: |-
+                    #!/bin/bash
+
+                    inventory=/home/jedi/inventory/hosts
+                    mkdir -p /home/jedi/inventory
+                    chown -R _USER_NAME_:_USER_NAME_ /home/jedi/inventory/
+
+                    cat > ${inventory} <<EOF
+                    [all:vars]
+                    USER_NAME=_USER_NAME_
+                    use_master_for_workloads=true
+                    kube_apiserver_cert_altnames=["_LB_EXTERNAL_IP_"]
+                    chrony_config_server=["159.107.173.12"]
+                    setup_chrony=true
+                    calico_mtu=1400
+
+                    [all]
+                    master-01 ansible_host=_MASTER_IP_
+                    node-lb ansible_host=_LB_IP_
+
+                    EOF
+
+                    counter=0
+                    for each in _MINIONS_IP_; do
+                      counter=$((counter+1))
+                      echo "node-$(printf %02d $counter) ansible_host=${each}" >> ${inventory};
+                    done
+
+                    cat >> ${inventory} <<EOF
+
+                    [master]
+                    master-01
+
+                    [worker]
+                    EOF
+
+                    counter=0
+                    for each in _MINIONS_IP_; do
+                      counter=$((counter+1))
+                      echo "node-$(printf %02d $counter)" >> ${inventory};
+                    done
+
+                    cat >> ${inventory} <<EOF
+
+                    [etcd]
+                    master-01
+                    node-01
+                    node-02
+
+                    [ingress_lb]
+                    node-lb lb_external_ip=_LB_EXTERNAL_IP_ lb_internal_ip=_LB_IP_
+                    EOF
+
+              runcmd:
+                  - /run/cloud-init/2_90_setup_ansible_host.sh
+      - config:
+          str_replace:
+            params:
+              _OS_PASSWORD_: {get_param: os_password}
+              _OS_USER_: {get_param: os_user}
+              _OS_URL_: {get_param: os_url}
+              _OS_PROJECT_: {get_param: os_project}
+              CONTAINER_NAME: {get_param: erikube_s3_container_name}
+              FILE_NAME: {get_param: s3_file_name}
+              USER_NAME: {get_param: ansible_user_name}
+            template: |
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              write_files:
+                - path: /run/cloud-init/2_99_s3_and_extract.sh
+                  owner: root:root
+                  permissions: '0755'
+                  content: |
+                    #!/bin/bash
+                    set -x
+                    log_directory=/var/log
+                    (
+                    su - USER_NAME <<EOL
+                    export OS_USERNAME=_OS_USER_
+                    export OS_PROJECT_NAME=_OS_PROJECT_
+                    export OS_PASSWORD=_OS_PASSWORD_
+                    export OS_AUTH_URL=_OS_URL_
+                    #curl -O http://131.160.201.5:8080/v1/AUTH_71e9edb0cdba468781a4239c7b242014/erikube/erikube-0.4.0-198-afd23fd-x86_64.tgz
+                    #tar -xzf erikube-0.4.0-198-afd23fd-x86_64.tgz
+                    EOL
+
+                    #PLAYBOOK_PATH=$(su - USER_NAME -c "tar tf /home/USER_NAME/erikube-0.4.0-198-afd23fd-x86_64.tgz | head -1")
+
+                    #su - USER_NAME <<EOL
+                    #cd /home/USER_NAME/${PLAYBOOK_PATH}ansible/erikube
+                    #ansible-playbook -i /home/USER_NAME/inventory install.yml -vv
+                    #rm -rf FILE_NAME
+                    #EOL
+                    ) > ${log_directory}/2_99_s3_and_extract.log 2>&1 &
+                    time wait
+              runcmd:
+                - /run/cloud-init/2_99_s3_and_extract.sh
+
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          final_message: "The system is now up, after $UPTIME seconds"
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: manager}
+
+  internal_ip:
+    value: {get_attr: [ansible_eth0, fixed_ips, 0, ip_address]}
+
+  external_ip:
+    value: {get_attr: [ansible_eth1, fixed_ips, 0, ip_address]}

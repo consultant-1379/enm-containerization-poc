@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    enmnfs: "nfs-netlog"
+  name: nfs-netlog
+spec:
+  capacity:
+    storage: 2Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 131.160.142.101
+    path: "/ericsson/netlog"
+  persistentVolumeReclaimPolicy: Retain

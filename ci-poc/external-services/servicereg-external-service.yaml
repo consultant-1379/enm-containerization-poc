@@ -1,0 +1,7 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: serviceregistry
+spec:
+  type: ExternalName
+  externalName: serviceregistry.service.enm

@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cmserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: cmserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cmserv
+    spec:
+      containers:
+      - name: cmserv
+        resources:
+          requests:
+            memory: "3Gi"
+        image: k8s-registry.eccd.local/cmserv:green
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+        - bash /var/tmp/cmserv_config.sh; while true; do sleep 10; done
+        volumeMounts:
+        - name: data
+          mountPath: /ericsson/tor/data
+        - name: dumps
+          mountPath: /ericsson/enm/dumps
+        - name: mdt
+          mountPath: /etc/opt/ericsson/ERICmodeldeployment
+        - name: batch
+          mountPath: /ericsson/batch
+        - name: config_mgt
+          mountPath: /ericsson/config_mgt
+      volumes:
+      - name: data
+        nfs:
+          server: 131.160.142.101
+          path: "/ericsson/data"
+      - name: dumps
+        nfs:
+          server: 131.160.142.101
+          path: "/ericsson/hcdumps"
+      - name: mdt
+        nfs:
+          server: 131.160.142.101
+          path: "/ericsson/mdt"
+      - name: batch
+        nfs:
+          server: 131.160.142.101
+          path: "/ericsson/batch"
+      - name: config_mgt
+        nfs:
+          server: 131.160.142.101
+          path: "/ericsson/config_mgt"

@@ -1,0 +1,9 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: nfs-data
+spec:
+  clusterIP: None
+  ports:
+  - protocol: TCP
+    port: 32756

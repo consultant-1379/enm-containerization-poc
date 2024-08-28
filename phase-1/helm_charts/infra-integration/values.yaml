@@ -1,0 +1,64 @@
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+
+
+images:
+  infra-integration:
+    name:
+    tag:
+    command:
+
+imageCredentials:
+  repoPath: proj_oss_releases/enm
+  pullPolicy: Always
+  registry:
+    url:
+    pullSecret:
+
+#Enable software to be included.
+eric-enm-globalproperties:
+  enabled: true
+
+eric-enm-nfspvc:
+  enabled: true
+
+nfs-client-provisioner:
+  enabled: true
+
+eric-enm-serviceroles:
+  enabled: true
+
+eric-enmsg-gossiprouter-cache:
+  enabled: true
+
+eric-enmsg-gossiprouter-remoting:
+  enabled: true
+
+eric-enmsg-jmsserver:
+  enabled: true
+
+eric-enmsg-modelserv:
+  enabled: true
+
+eric-enmsg-opendj:
+  enabled: true
+
+eric-enmsg-postgres:
+  enabled: true
+
+eric-enmsg-sentinel:
+  enabled: true
+
+eric-enmsg-serviceregistry:
+  enabled: true
+
+nfs-client-provisioner:
+  enabled: true
+
+eric-enm-elasticsearch:
+  enabled: true
+
+neo4j:
+  enabled: true

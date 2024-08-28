@@ -1,0 +1,21 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: efs-test
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: efs-test
+    spec:
+      containers:
+      - name: efs-test
+        image: alpine:latest
+        volumeMounts:
+        - mountPath: /efs_vol
+          name: efs
+      volumes:
+        - name: efs
+          persistentVolumeClaim:
+            claimName: efs

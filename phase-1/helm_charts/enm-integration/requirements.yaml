@@ -1,0 +1,13 @@
+dependencies:
+  - name: adp-integration
+    repository: "@local"
+    version: 0.1.0
+    condition: adp-integration.enabled
+  - name: infra-integration
+    repository: "@local"
+    version: 0.1.0
+    condition: infra-integration.enabled
+  - name: stateless-integration
+    repository: "@local"
+    version: 0.1.0
+    condition: stateless-integration.enabled

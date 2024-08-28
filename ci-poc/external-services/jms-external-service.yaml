@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: jms
+spec:
+  type: ExternalName
+  externalName: jms.service.enm
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: jms01
+spec:
+  type: ExternalName
+  externalName: jms.service.enm

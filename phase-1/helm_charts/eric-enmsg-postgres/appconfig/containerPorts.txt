@@ -1,0 +1,2 @@
+- containerPort: 5432
+- containerPort: 22

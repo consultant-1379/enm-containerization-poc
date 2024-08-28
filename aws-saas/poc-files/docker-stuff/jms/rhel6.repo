@@ -1,0 +1,14 @@
+# Certificate-Based Repositories
+# Managed by (rhsm) subscription-manager
+#
+# *** This file is auto-generated.  Changes made here will be over-written. ***
+# *** Use "subscription-manager repo-override --help" if you wish to make changes. ***
+#
+# If this file is empty and this system is subscribed consider
+# a "yum repolist" to refresh available repos
+#
+[rhel6]
+gpgcheck = 0
+enabled = 1
+baseurl = http://131.160.200.119/6/
+name = ENM Repository

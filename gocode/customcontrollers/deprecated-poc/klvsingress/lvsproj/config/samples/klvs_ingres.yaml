@@ -1,0 +1,23 @@
+apiVersion: routers.lvsrouter.ericsson.com/v1
+kind: KlvsRouter
+metadata:
+  name: klvsrouter-sample-sm1
+spec:
+  # Add fields here
+  vip: 10.35.84.5
+  service:
+    name: tcpserver
+    serviceMappings:
+      - portName: http
+        vipPort: 80
+        protocol: tcp
+        scheduler: rr
+      - portName: http
+        vipPort: 80
+        protocol: tcp
+        scheduler: rr
+    serviceEndpoints:
+      - 1.1.1.1:50
+      - 1.1.1.1:40
+      - 2.2.2.2:50
+      - 3.3.3.3:40

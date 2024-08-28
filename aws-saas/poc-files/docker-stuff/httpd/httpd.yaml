@@ -1,0 +1,79 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: httpd-deployment
+spec:
+  selector:
+    matchLabels:
+      app: httpd
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: httpd
+    spec:
+      containers:
+      - name: httpd
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:httpd-rhel6base
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 22
+          - containerPort: 123
+          - containerPort: 8666
+          - containerPort: 4447
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-smrs
+            mountPath: /ericsson/tor/smrs
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment              
+          - name: pv-shared
+            mountPath: /ericsson/home             
+          - name: pv-custom
+            mountPath: /ericsson/custom           
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps                
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-alex
+            mountPath: /ericsson/enm/alex
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-smrs
+          persistentVolumeClaim:
+            claimName: smrs                             
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-alex
+          persistentVolumeClaim:
+            claimName: alex
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared

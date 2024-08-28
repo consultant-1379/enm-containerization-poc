@@ -1,0 +1,47 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gossiprouter-deployment
+spec:
+  selector:
+    matchLabels:
+      app: gossiprouter
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: gossiprouter
+    spec:
+      containers:
+      - name: gossiprouter
+        resources:
+          requests:
+            memory: "2Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:gossip-rhel6base
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 12001
+          - containerPort: 12002
+          - containerPort: 9990 
+          - containerPort: 8009 
+          - containerPort: 9999 
+          - containerPort: 8080 
+          - containerPort: 4447 
+          - containerPort: 9999
+        volumeMounts:
+          - name: data-pvc
+            mountPath: /ericsson/tor/data
+          - name: dumps
+            mountPath: /ericsson/enm/dumps
+          - name: norollback
+            mountPath: /ericsson/no_rollback
+      volumes:
+        - name: data-pvc
+          persistentVolumeClaim:
+            claimName: data
+        - name: dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: norollback
+          persistentVolumeClaim:
+            claimName: norollback

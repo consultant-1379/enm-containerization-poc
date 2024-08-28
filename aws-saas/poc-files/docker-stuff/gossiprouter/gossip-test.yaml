@@ -1,0 +1,17 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: gossip-test
+spec:
+  containers:
+  - name: gossip-test
+    image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:gossip-rhel6base
+    command: ["/bin/bash"]
+    args: ["-c","while true; do sleep 10;done"] 
+    volumeMounts:
+       - name: data-pvc
+         mountPath: /ericsson/tor/data
+  volumes:
+    - name: data-pvc
+      persistentVolumeClaim:
+        claimName: data

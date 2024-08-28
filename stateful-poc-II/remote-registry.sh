@@ -1,0 +1,48 @@
+#!/bin/bash
+
+#nodes=(10.0.10.21 10.0.10.22 10.0.10.12 10.0.10.18 10.0.10.17 10.0.10.8 10.0.10.15 10.0.10.20 10.0.10.6)
+
+nodes=(10.0.10.10)
+
+for i in ${nodes[@]};do
+    ssh $i bash -c "'
+    sudo chmod 777 /etc/hosts
+    sudo echo "131.160.200.114 dockerregistry" >> /etc/hosts
+    sudo mkdir /etc/docker/certs.d/dockerregistry:5000
+    sudo chmod -R 777 /etc/docker/certs.d/dockerregistry\:5000
+    sudo cat > /etc/docker/certs.d/dockerregistry\:5000/ca.crt  <<EOL
+-----BEGIN CERTIFICATE-----
+MIIFiTCCA3GgAwIBAgIJAOMQhQtqwf3/MA0GCSqGSIb3DQEBCwUAMFsxCzAJBgNV
+BAYTAmllMRUwEwYDVQQHDAxEZWZhdWx0IENpdHkxHDAaBgNVBAoME0RlZmF1bHQg
+Q29tcGFueSBMdGQxFzAVBgNVBAMMDmRvY2tlcnJlZ2lzdHJ5MB4XDTE4MDIyNzE3
+NDcxMloXDTE5MDIxODE3NDcxMlowWzELMAkGA1UEBhMCaWUxFTATBgNVBAcMDERl
+ZmF1bHQgQ2l0eTEcMBoGA1UECgwTRGVmYXVsdCBDb21wYW55IEx0ZDEXMBUGA1UE
+AwwOZG9ja2VycmVnaXN0cnkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoIC
+AQDX+FEwkaVVewvCjvImvrYYHhygPQqfL7lElTjhn8yzD9XM7X0ZBfUYTSREkgU3
+zJBJdYrjyCfSF8rBATCNPx5bXtreE/U9auXE8F38n736PsIerh3Lc67WsPI4jTCn
+Kwo0XKFFgj0zDIIXZiSThfHhJG6lIhLzztdNMeBcvCGcSwRrYtTkGeMaz12W2cVg
+RUKtjE2KN6uIII0AiSrciNMed6Yf+vRrrTvIHKCzORBd36o6zFO4o5lorzb03ftk
+xZxVTGfPPVhaXengpp+E7IWGBn4RPCZo+n6cIc2nVa/mjg51uOTTww+XufHfeWkI
+fBrD2ZhHYRKuFKqh60iWH+qtUssJTtegWqRCtYHfR8y65EkJkEsezkF/elaVBp+3
+/DJgNAmymjCfA7PMPMZ8eJZC5SDPL5VD9henJyBw5xzNUdviG7iKNtK1jWKgYxpd
+eEK8/S/hhlXqDJjMyTsqekuZ8p4H0wXonn3dKgL2lZNwK3lWcCx6w6DBX7rFDo9M
+CPETb7n9CcdcWcadOgDIoS98bllLcjgGfIvUxrhwRqv1YkriiOmWTOxqX4PTQWvi
+9zCoPmFHsN8FZB9isRnusFOMhzqYBEYYXlp9RpugWX/huugV6QQQheYT5P+u/ofj
+yXjjIeLUnF4IpJZIl79O/7vMKNeT29LDtPxn/XSuFsXNpwIDAQABo1AwTjAdBgNV
+HQ4EFgQUkIpqqCOn/w/b81Zmt4AA1Vcz99IwHwYDVR0jBBgwFoAUkIpqqCOn/w/b
+81Zmt4AA1Vcz99IwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAtFtc
+NuGnfmpspyIGtnhHX0mBYnq3Y9mFuS1wWXZ0+zdkhAcFuJgtNt0rGV6H9Onl8kao
+4Y6fH5RiMyCCDGQ5q8PV90Oj53xTDDA1HC7eOFNm26/n2DeurD+CVtUme/Zqbban
+Yoxa8/RVKq237JZE2wS9IgoNle624LkjAJpCcv2LAWG8kVNpDZ1iHNN/7tE8FSq5
+hSsjUzBjCym5VbAVrCbweL9Z3Nr5n99A7k4K3O9/XmDEghKzWsTFUMp2gJCROSvV
+ONxmXnGxDwUw19Ap7agvLbhX1BHZQjyP5dH9kC1OztRA8f+7uoWX7b/O8Eh0XIII
+SupSWklpK8yt5wY4ASi4k4bRI5flkmdwYS8FqumhrOuyEgfxbmc4mBcOcLr/jcce
+xO1X9btE6x56Yp3rBgYq/RgfWgOcsniK9AWn3NbymbM0tM4Lt2Bpz20LcUoxcq6w
+2CZhfgxR+a1v5cYidAy+z8eKjmsVI2YLyvEJTfUFoaJ1fB+rxxR2cTEbJ3VgLPIb
+Z6QoSKCX4RPMk2fVcil3bWjpZPwDBwVVfKcusgS3bCfAaQERd/499RQ9e18d81KR
+YqFYJZf4JW6wJhuaTykeBEhTYjmo+vnaIdieem9m34vOGbMSs3PW6z/ootsh4Rvp
+uHptsYBrxhL3m8WBZBydW9TAhEIyEsBhavi+jd4=
+-----END CERTIFICATE-----
+EOL
+     '"
+done

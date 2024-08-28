@@ -1,0 +1,102 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: postgres
+  labels:
+    app: postgres
+spec:
+  ports:
+  - port: 5432
+  clusterIP: None
+  selector:
+    app: postgres
+
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: postgres
+spec:
+  serviceName: "postgres"
+  replicas: 1 # by default is 1
+  selector:
+    matchLabels:
+      app: postgres # has to match .spec.template.metadata.labels
+  template:
+    metadata:
+      labels:
+        app: postgres # has to match .spec.selector.matchLabels
+    spec:
+      terminationGracePeriodSeconds: 10
+      containers:
+      - name: postgres
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:postgres-rhel6base
+        ports:
+        - containerPort: 5432
+        - containerPort: 22
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/postgres_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-cron
+            mountPath: /ericsson/vmcrons
+          - name: pv-postgres
+            mountPath: /ericsson/postgres
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-cron
+          persistentVolumeClaim:
+            claimName: vmcrons
+  volumeClaimTemplates:
+  - metadata:
+      name: pv-postgres
+    spec:
+      storageClassName: "gp2"
+      accessModes: [ "ReadWriteOnce" ]
+      resources:
+        requests:
+          storage: 5Gi

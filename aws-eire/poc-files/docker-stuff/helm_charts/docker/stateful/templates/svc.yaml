@@ -1,0 +1,17 @@
+{{- if .Values.servicePorts.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app: {{ .Values.service.name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: "{{ .Release.Name }}"
+    heritage: "{{ .Release.Service }}"
+spec:
+  type: ClusterIP
+  ports:
+{{ .Files.Get "config/servicePorts.txt" | indent 4 }}
+  selector:
+    app: {{ .Values.service.name }}
+{{- end }}

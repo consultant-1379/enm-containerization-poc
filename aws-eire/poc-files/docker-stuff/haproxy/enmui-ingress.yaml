@@ -1,0 +1,30 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: enm-ui
+  annotations:
+   # nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+    nginx.ingress.kubernetes.io/enable-rewrite-log: "true"
+    nginx.ingress.kubernetes.io/secure-backends: "true"
+    kubernetes.io/ingress.class: "nginx"
+spec:
+  rules:
+  - host: app.enmaas.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: httpd
+          servicePort: 443
+      - path: /rest/
+        backend:
+          serviceName: uiserv-micro
+          servicePort: 443
+      - path: /pm-service/
+        backend:
+          serviceName: pmserv-micro
+          servicePort: 443
+  tls:
+  - hosts:
+    - app.enmaas.io

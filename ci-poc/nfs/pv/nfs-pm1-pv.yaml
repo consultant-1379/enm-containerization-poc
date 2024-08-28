@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: nfs-pm1
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 131.160.142.101
+    path: "/ericsson/pm1"
+  persistentVolumeReclaimPolicy: Retain

@@ -1,0 +1,193 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mscm-deployment
+spec:
+  selector:
+    matchLabels:
+      app: mscm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: mscm
+    spec:
+      initContainers:
+      - name: service-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps -n default'
+      containers:
+      - name: mscm
+        resources:
+          requests:
+            memory: "6Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-mscm
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 4447
+          - containerPort: 9999
+          - containerPort: 56164
+          - containerPort: 3528
+          - containerPort: 58156
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 59001
+          - containerPort: 59010
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/mscm_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-shared
+            mountPath: /ericsson/home
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: nfs-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: nfs-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: nfs-pmic1
+            mountPath: /ericsson/pmic1
+          - name: nfs-pmic2
+            mountPath: /ericsson/pmic2
+          - name: nfs-pmlinks
+            mountPath: /ericsson/symvol
+          - name: nfs-smrs
+            mountPath: /ericsson/tor/smrs
+          - name: nfs-ddcdata
+            mountPath: /var/ericsson/ddc_data
+          - name: nfs-cron
+            mountPath: /ericsson/vmcrons
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-configmgt
+          persistentVolumeClaim:
+            claimName: nfs-configmgt
+        - name: nfs-shared
+          persistentVolumeClaim:
+            claimName: nfs-home
+        - name: nfs-upgind
+          persistentVolumeClaim:
+            claimName: nfs-upgind
+        - name: nfs-pmic1
+          persistentVolumeClaim:
+            claimName: nfs-pm1
+        - name: nfs-pmic2
+          persistentVolumeClaim:
+            claimName: nfs-pm2
+        - name: nfs-pmlinks
+          persistentVolumeClaim:
+            claimName: nfs-pmlinks
+        - name: nfs-smrs
+          persistentVolumeClaim:
+             claimName: nfs-smrs
+        - name: nfs-ddcdata
+          persistentVolumeClaim:
+            claimName: nfs-ddcdata
+        - name: nfs-cron
+          persistentVolumeClaim:
+            claimName: nfs-cron
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mscm
+spec:
+  ports:
+    - name: jboss
+      port: 8080
+      targetPort: 8080
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+    - name: mediation-1
+      port: 59010
+      targetPort: 59010
+    - name: mediation-2
+      port: 59001
+      targetPort: 59001
+  selector:
+    app: mscm
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mscm-corba
+spec:
+  type: NodePort
+  ports:
+    - name: mediation-1
+      port: 59001
+      targetPort: 59001
+  selector:
+    app: mscm
+
+---
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: mscm-corba
+spec:
+  backend:
+    serviceName: mscm-corba
+    servicePort: 59001

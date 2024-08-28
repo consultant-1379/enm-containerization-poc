@@ -1,0 +1,15 @@
+kind: Service
+apiVersion: v1
+metadata:
+  name: elasticsearch
+spec:
+  selector:
+    component: elasticsearch
+    role: compact
+  ports:
+  - name: http
+    port: 9200
+    protocol: TCP
+  - name: transport
+    port: 9300
+    protocol: TCP

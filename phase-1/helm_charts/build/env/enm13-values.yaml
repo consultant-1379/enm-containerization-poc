@@ -1,0 +1,135 @@
+#integration values.yaml
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+
+  persistentVolumeClaim:
+    storageClass: erikube-rbd
+
+  #nfs provisioner
+  nfsprovisioner:
+    server: 10.210.140.71
+    path: /ericsson/nfs13
+
+  storageClass:
+    name: nfs-enm13
+    archiveOnDelete: false
+  #neo4j
+  core:
+    persistentVolume:
+      storageClass: erikube-rbd
+
+  ingress:
+    enmHost: enm13-phase-0.athtem.eei.ericsson.se
+
+  #Global Properties
+  enmProperties:
+    lb_external_port: 10.210.153.10
+
+  nfs:
+    storageClass: nfs-enm13
+    alexSize: 1Gi
+    amosSize: 1Gi
+    batchSize: 4Gi
+    configmgtSize: 5Gi
+    cronSize: 1Gi
+    customSize: 1Gi
+    dataSize: 20Gi
+    ddcdataSize: 5Gi
+    dlmsSize: 5Gi
+    hcdumpsSize: 10Gi
+    homeSize: 20Gi
+    mdtSize: 10Gi
+    netlogSize: 2Gi
+    norollbackSize: 5Gi
+    pm1Size: 5Gi
+    pm2Size: 5Gi
+    pmlinksSize: 5Gi
+    pmulSize: 1Gi
+    sdnSize: 1Gi
+    smrsSize: 5Gi
+    tfdSize: 10Gi
+    upgindSize: 4Gi
+
+# adp-integration
+neo4j:
+  enabled: true
+eric-enm-elasticsearch:
+  enabled: true
+
+# infra-integration
+nfs-client-provisioner:
+  enabled: true
+eric-enm-globalproperties:
+  enabled: true
+eric-enm-nfspvc:
+  enabled: true
+eric-enm-serviceroles:
+  enabled: true
+eric-enmsg-gossiprouter-cache:
+  enabled: true
+eric-enmsg-gossiprouter-remoting:
+  enabled: true
+eric-enmsg-jmsserver:
+  enabled: true
+eric-enmsg-modelserv:
+  enabled: true
+eric-enmsg-opendj:
+  enabled: true
+eric-enmsg-postgres:
+  enabled: true
+eric-enmsg-sentinel:
+  enabled: true
+eric-enmsg-serviceregistry:
+  enabled: true
+
+# enm-integration
+eric-enmsg-access-control:
+  enabled: true
+eric-enmsg-cmservice:
+  enabled: true
+eric-enmsg-eventbasedclient:
+  enabled: true
+eric-enmsg-flsserv:
+  enabled: true
+eric-enmsg-fm-alarm-processing:
+  enabled: true
+eric-enmsg-fm-service:
+  enabled: true
+eric-enmsg-ha-proxy:
+  enabled: true
+eric-enmsg-httpd:
+  enabled: true
+eric-enmsg-lcmservice:
+  enabled: true
+eric-enmsg-medrouter:
+  enabled: true
+eric-enmsg-mscm:
+  enabled: true
+eric-enmsg-msfm:
+  enabled: true
+eric-enmsg-mspm:
+  enabled: true
+eric-enmsg-networkexplorer:
+  enabled: true
+eric-enmsg-openidm:
+  enabled: true
+eric-enmsg-pki-ra-service:
+  enabled: true
+eric-enmsg-pmic-router-policy:
+  enabled: true
+eric-enmsg-pmservice:
+  enabled: true
+eric-enmsg-security-service:
+  enabled: true
+eric-enmsg-sps-service:
+  enabled: true
+eric-enmsg-sso:
+  enabled: true
+eric-enmsg-uiservice:
+  enabled: true
+eric-enmsg-web-push-service:
+  enabled: true
+eric-enmsg-supervisionclient:
+  enabled: true

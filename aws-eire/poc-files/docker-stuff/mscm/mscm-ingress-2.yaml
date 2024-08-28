@@ -1,0 +1,8 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: mscm-ingress-2
+spec:
+  backend:
+    serviceName: mscm
+    servicePort: 59001

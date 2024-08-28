@@ -1,0 +1,262 @@
+heat_template_version: 2015-04-30
+description: Load Balancer Node
+parameters:
+  flavor:
+    type: string
+    description: flavor used by the server
+
+  image_name:
+    type: string
+    description: image used by the server
+
+  internal_network:
+    type: string
+    description: network used by the server
+
+  external_network:
+    type: string
+    description: name of a network to use for floating IP address
+
+  username:
+    type: string
+    description: username of the user
+
+  key_name:
+    type: string
+    description: name of an existing key pair to use for the server
+    constraints:
+      - custom_constraint: nova.keypair
+        description: must name a public key (pair) known to Nova
+  security_group_name:
+    type: string
+  erikube_timezone:
+    type: string
+    default: UTC
+  loadbalancer_external_interface:
+    type: string
+    default: eth1
+  loadbalancer_external_netmask:
+    type: string
+  loadbalancer_external_gateway:
+    type: string
+  loadbalancer_external_ip_address:
+    type: string
+  use_config_drive:
+    default: true
+    type: boolean
+
+resources:
+
+  create_user:
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        system_info:
+          default_user:
+            name: {get_param: username}
+            lock_passwd: true
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+
+  loadbalancer_eth0:
+    type: OS::Neutron::Port
+    properties:
+     network: {get_param: internal_network}
+     allowed_address_pairs:
+      - ip_address: 0.0.0.0/0
+     security_groups:
+      - get_param: security_group_name
+
+  loadbalancer_eth1:
+    type: OS::Neutron::Port
+    properties:
+     network: {get_param: external_network}
+     allowed_address_pairs:
+      - ip_address: 0.0.0.0/0
+     security_groups:
+      - get_param: security_group_name
+     fixed_ips:
+      - ip_address:
+          get_param: loadbalancer_external_ip_address
+
+  loadbalancer_config:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: loadbalancer_user_data}
+        type: multipart
+      - config: {get_resource: create_user}
+
+  loadbalancer:
+    type: OS::Nova::Server
+    properties:
+      config_drive: {get_param: use_config_drive}
+      name:
+        list_join: [-, [{get_param: "OS::stack_name"}, lb]]
+      image: {get_param: image_name}
+      flavor: {get_param: flavor}
+      key_name: {get_param: key_name}
+      networks:
+       - port: {get_resource: loadbalancer_eth0}
+       - port: {get_resource: loadbalancer_eth1}
+      user_data_format: RAW
+      user_data:
+        get_resource: loadbalancer_config
+
+  loadbalancer_user_data:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config:
+          str_replace:
+            params:
+              $timezone:
+                get_param: erikube_timezone
+            template: |-
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              timezone: $timezone
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          final_message: "The loadbalancer_user_data system is now up, after $UPTIME seconds"
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          write_files:
+            - path: /run/cloud-init/1_1_plumb_ethernet_interfaces.sh
+              owner: root:root
+              permissions: '0777'
+              content : |
+                #!/bin/bash
+                log_directory=/var/log
+                (
+                # Plumbs up the ethernet interface
+                listOfEthInterface=$( netstat -ia | sed 's/[ \t].*//;/^$/d' | grep eth )
+                for ethernet in $listOfEthInterface; do
+                  if [ ! -f /etc/sysconfig/network-scripts/ifcfg-${ethernet} ]; then
+                    echo "Initialising Interface ${ethernet}"
+                    cat /etc/sysconfig/network-scripts/ifcfg-eth0 | sed 's/eth0/'"$ethernet"'/g' > /etc/sysconfig/network-scripts/ifcfg-${ethernet}
+                    ifup /etc/sysconfig/network-scripts/ifcfg-${ethernet}
+                    interfaceUp=$( ifconfig | grep ${ethernet} )
+                    if [[ ${interfaceUp} == "" ]]; then
+                      echo "ERROR: Issue bring up the interface: $ethernet"
+                    fi
+                  fi
+                done
+                ) > ${log_directory}/1_1_plumb_ethernet_interfaces.log 2>&1 &
+                # wait for the sub-task to finish and print elapsed time
+                time wait
+          runcmd:
+            - /run/cloud-init/1_1_plumb_ethernet_interfaces.sh
+      - config:
+          str_replace:
+            params:
+              _ADDRESSIPV6_: ''
+              _ADDRESS_:
+                get_param: loadbalancer_external_ip_address
+              _GATEWAYIPV6_: ''
+              _GATEWAY_:
+                get_param: loadbalancer_external_gateway
+              _INTERFACE_:
+                get_param: loadbalancer_external_interface
+              _NETMASK_:
+                get_param: loadbalancer_external_netmask
+            template: |
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              write_files:
+                - path: /run/cloud-init/1_3_plumb_ip_address_eth1.sh
+                  owner: root:root
+                  permissions: '0777'
+                  content : |
+                    #!/bin/bash
+                    log_directory=/var/log
+                    (
+                    # Plumbs up the ethernet interface
+                    echo "Plumbing Interface _INTERFACE_"
+
+                    # Remove parameters
+                    sed -i '/BOOTPROTO=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                    sed -i '/NETMASK=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                    sed -i '/IPADDR=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                    sed -i '/GATEWAY=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+
+                    echo 'BOOTPROTO=none' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    echo 'NETMASK=_NETMASK_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    echo 'IPADDR=_ADDRESS_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    echo 'GATEWAY=_GATEWAY_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+
+                    # plumb ipv6 address if it is present
+                    if ! [ -z '_ADDRESSIPV6_' ]; then
+                      # Remove parameters
+                      sed -i '/IPV6INIT=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                      sed -i '/IPV6ADDR=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                      sed -i '/IPV6_DEFAULTGW=/c\' /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_ > /dev/null
+                      echo 'IPV6INIT=yes' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                      echo 'IPV6ADDR=_ADDRESSIPV6_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                      echo 'IPV6_DEFAULTGW=_GATEWAYIPV6_' >> /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    fi
+
+                    ifdown _INTERFACE_
+                    ifup /etc/sysconfig/network-scripts/ifcfg-_INTERFACE_
+                    interfaceUp=$( ifconfig | grep _INTERFACE_ )
+                    if [[ ${interfaceUp} == "" ]]; then
+                      echo "ERROR: Issue bring up the interface: _INTERFACE_"
+                    fi
+
+                    # XXX(emiligo) This is hack until cloud provider subnet starts issueing correct nameservers
+                    cat > /etc/resolv.conf <<RES
+                    domain athtem.eei.ericsson.se
+                    nameserver 159.107.173.12
+                    nameserver 159.107.173.3
+                    RES
+                    ) > ${log_directory}/1_3_plumb_ip_address_eth1.log 2>&1 &
+                    # wait for the sub-task to finish and print elapsed time
+                    time wait
+              runcmd:
+                - /run/cloud-init/1_3_plumb_ip_address_eth1.sh
+
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          write_files:
+            - path: /run/cloud-init/1_4_erikube_yum_repositories.sh
+              owner: root:root
+              permissions: '0777'
+              content : |
+                #!/bin/bash
+                log_directory=/var/log
+                (
+                 sudo ifconfig eth0 down
+                 sudo ifconfig eth0 up
+
+                ) > ${log_directory}/1_4_erikube_yum_repositories.log 2>&1 &
+                # wait for the sub-task to finish and print elapsed time
+                time wait
+          runcmd:
+            - /run/cloud-init/1_4_erikube_yum_repositories.sh
+
+      - config:
+          str_replace:
+            params:
+              $timezone:
+                get_param: erikube_timezone
+            template: |
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              timezone: $timezone
+      - config: |
+          #cloud-config
+          merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+          final_message: "The system is now up, after $UPTIME seconds"
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: loadbalancer}
+
+  internal_ip:
+    value: {get_attr: [loadbalancer_eth0, fixed_ips, 0, ip_address]}
+
+  external_ip:
+    value: {get_attr: [loadbalancer_eth1, fixed_ips, 0, ip_address]}

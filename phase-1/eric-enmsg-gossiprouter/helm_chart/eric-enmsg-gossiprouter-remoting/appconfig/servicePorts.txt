@@ -1,0 +1,3 @@
+- name: remoting
+  port: 12001
+  targetPort: 12001

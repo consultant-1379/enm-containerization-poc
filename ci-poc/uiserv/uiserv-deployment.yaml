@@ -1,0 +1,44 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: uiserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: uiserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: uiserv
+    spec:
+      containers:
+      - name: uiserv
+        resources:
+          requests:
+            memory: "3Gi"
+        image: k8s-registry.eccd.local/uiserv:green 
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/uiserv_config.sh; while true; do sleep 10; done
+        volumeMounts:
+          - name: data
+            mountPath: /ericsson/tor/data
+          - name: dumps
+            mountPath: /ericsson/enm/dumps
+          - name: mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+      volumes:
+        - name: data
+          nfs:
+            server: 131.160.142.101
+            path: "/ericsson/data"
+        - name: dumps
+          nfs:
+            server: 131.160.142.101
+            path: "/ericsson/hcdumps"
+        - name: mdt
+          nfs:
+            server: 131.160.142.101
+            path: "/ericsson/mdt"

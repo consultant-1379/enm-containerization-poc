@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: models
+spec:
+  selector:
+    matchLabels:
+      app: models
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: models
+    spec:
+      containers:
+      - name: models
+        image: dockerregistry:5000/rhel6-models
+        resources:
+          limits:
+            memory: "8Gi"
+        ports:
+          - containerPort: 34371
+          - containerPort: 36869
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/models_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-ddc-data
+            mountPath: /var/ericsson/ddc_data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-configmgtupgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: pv-models-jar
+            mountPath: /ericsson//var/opt/ericsson/ERICmodeldeployment
+          - name: pv-models-tmp
+            mountPath: /ericsson/tmp
+          - name: pv-models
+            mountPath: /ericsson/models
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-ddc-data
+          persistentVolumeClaim:
+            claimName: ddc-data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: hcdumps
+        - name: pv-configmgtupgind
+          persistentVolumeClaim:
+            claimName: config-mgt-upgind
+        - name: pv-models-jar
+          persistentVolumeClaim:
+            claimName: models-jar
+        - name: pv-models-tmp
+          persistentVolumeClaim:
+            claimName: models-tmp
+        - name: pv-models
+          persistentVolumeClaim:
+            claimName: models

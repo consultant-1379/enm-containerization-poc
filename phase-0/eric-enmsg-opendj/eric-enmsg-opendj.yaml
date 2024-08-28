@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap-remote
+  labels:
+    app: opendj
+spec:
+  ports:
+  - port: 1636
+  selector:
+    app: opendj
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ldap-local
+  labels:
+    app: opendj
+spec:
+  ports:
+  - port: 1636
+  selector:
+    app: opendj
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opendj
+  labels:
+    app: opendj
+spec:
+  clusterIP: None
+  ports:
+  - port: 1636
+  selector:
+    app: opendj
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: opendj
+spec:
+  selector:
+    matchLabels:
+      app: opendj
+  replicas: 1
+  serviceName: opendj
+  template:
+    metadata:
+      labels:
+        app: opendj
+    spec:
+      containers:
+      - name: opendj
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-opendj
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 1636
+          - containerPort: 4444
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/opendj_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-hcdumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/no_rollback
+          - name: nfs-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: nfs-home
+            mountPath: /ericsson/home
+          - name: nfs-cron
+            mountPath: /ericsson/vmcrons
+          - name: pv-opendj
+            mountPath: /ericsson/opendj
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpphysical
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-hcdumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-configmgt
+          persistentVolumeClaim:
+            claimName: nfs-configmgt
+        - name: nfs-home
+          persistentVolumeClaim:
+            claimName: nfs-home
+        - name: nfs-cron
+          persistentVolumeClaim:
+            claimName: nfs-cron
+  volumeClaimTemplates:
+    - metadata:
+        name: pv-opendj
+      spec:
+        storageClassName: "erikube-cinder"
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 2Gi

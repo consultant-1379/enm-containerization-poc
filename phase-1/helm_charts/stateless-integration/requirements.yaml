@@ -1,0 +1,97 @@
+dependencies:
+  - name: eric-enmsg-access-control
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-access-control.enabled
+  - name: eric-enmsg-cmservice
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-cmservice.enabled
+  - name: eric-enmsg-eventbasedclient
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-eventbasedclient.enabled
+  - name: eric-enmsg-fls
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-fls.enabled
+  - name: eric-enmsg-fm-alarm-processing
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-fm-alarm-processing.enabled
+  - name: eric-enmsg-fm-service
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-fm-service.enabled
+  - name: eric-enmsg-ha-proxy
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-ha-proxy.enabled
+  - name: eric-enmsg-httpd
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-httpd.enabled
+  - name: eric-enmsg-lcmservice
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-lcmservice.enabled
+  - name: eric-enmsg-medrouter
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-medrouter.enabled
+  - name: eric-enmsg-mscm
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-mscm.enabled
+  - name: eric-enmsg-msfm
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-msfm.enabled
+  - name: eric-enmsg-mspm
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-mspm.enabled
+  - name: eric-enmsg-networkexplorer
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-networkexplorer.enabled
+  - name: eric-enmsg-openidm
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-openidm.enabled
+  - name: eric-enmsg-pki-ra-service
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-pki-ra-service.enabled
+  - name: eric-enmsg-pmic-router-policy
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-pmic-router-policy.enabled
+  - name: eric-enmsg-pmservice
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-pmservice.enabled
+  - name: eric-enmsg-security-service
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-security-service.enabled
+  - name: eric-enmsg-sps-service
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-sps-service.enabled
+  - name: eric-enmsg-sso
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-sso.enabled
+  - name: eric-enmsg-uiservice
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-uiservice.enabled
+  - name: eric-enmsg-web-push-service
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-web-push-service.enabled
+  - name: eric-enmsg-supervisionclient
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enmsg-supervisionclient.enabled

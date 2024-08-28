@@ -1,0 +1,2 @@
+# Do not remove empty line from end of this file
+* * * * *  root bash /ericsson/cmserv/scripts/register_web_context.sh > /dev/null 2>&1

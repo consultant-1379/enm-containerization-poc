@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sso-lb-s
+spec:
+  rules:
+  - host: sso.enmk8s.athtem.eei.ericsson.se
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: haproxy
+          servicePort: 8443
+  tls:
+  - hosts:
+    - sso.enmk8s.athtem.eei.ericsson.se

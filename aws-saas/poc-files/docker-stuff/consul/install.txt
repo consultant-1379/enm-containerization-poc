@@ -1,0 +1,12 @@
+# Build Docker Image
+docker build -t aws/consul-rhel6base .
+docker tag aws/consul-rhel6base 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:consul-rhel6base
+docker push 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:consul-rhel6base
+
+# Check registry
+aws ecr list-images --repository-name enmpoc1-registry
+
+# Create configmap, service & statefulset
+kubectl create configmap consul-server --from-file=server.json
+kubectl create -f consul-headless-service.yaml
+kubectl create -f consul-statefulservice.yaml

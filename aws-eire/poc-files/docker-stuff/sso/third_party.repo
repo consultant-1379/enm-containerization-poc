@@ -1,0 +1,26 @@
+# Certificate-Based Repositories
+# Managed by (rhsm) subscription-manager
+#
+# *** This file is auto-generated.  Changes made here will be over-written. ***
+# *** Use "subscription-manager repo-override --help" if you wish to make changes. ***
+#
+# If this file is empty and this system is subscribed consider
+# a "yum repolist" to refresh available repos
+#
+[thirdparty_extra]
+gpgcheck = 0
+enabled = 1
+baseurl = https://cifwk-oss.lmera.ericsson.se/static/dynamicRepos/atvts818yumRepo
+name = thirdparty_extra Repository
+
+[thirdparty_base]
+gpgcheck = 0
+enabled = 1
+baseurl = https://cifwk-oss.lmera.ericsson.se/static/staticRepos/RHEL6.6/dvd/
+name = thirdparty_base Repository
+
+[thirdparty_patches]
+gpgcheck = 0
+enabled = 1
+baseurl = https://cifwk-oss.lmera.ericsson.se/static/staticRepos/RHEL6.6_OS_Patch_Set_CXP9026826-1.29.1
+name = thirdparty_patches Repository

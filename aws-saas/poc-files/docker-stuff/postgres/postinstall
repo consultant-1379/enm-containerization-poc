@@ -1,0 +1,325 @@
+#!/bin/bash
+
+# 05 April 2017
+
+source /opt/ericsson/pgsql/etc/postgres01.config
+
+log(){
+    msg=$1
+    echo "`date +[%D-%T]` $msg" &>>$INSTALL_DIR/$LOG_FILE
+}
+
+#  Check Postgres Group with PGGID 26
+if grep -q -w $PG_GROUP /etc/group
+then
+	log "[INFO] Postgres group exists, installation proceeded"
+else
+	log "[DEBUG] Postgres group does not exist, group $PG_GROUP going to be created"
+
+	log "[DEBUG] Attempting to create group $PG_GROUP with GID: $PG_GID"
+	groupadd -g $PG_GID $PG_GROUP &>>$INSTALL_DIR/$LOG_FILE
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to create group $PG_GROUP"
+		exit 3
+	else
+		log "[INFO] Successfully created $PG_GROUP"
+	fi
+fi
+
+
+# Check Postgres User with PGUID 26
+if id -u $PG_USER >/dev/null 2>&1
+then
+	log "[INFO] Postgres user exists, installation proceeded"
+else
+	log "[DEBUG] Postgres user does not exist, user $PG_USER going to be created"
+
+	log "[DEBUG] Attempting to create user $PG_USER with UID: $PG_UID"
+	useradd -g $PG_GID -u $PG_UID $PG_USER &>>$INSTALL_DIR/$LOG_FILE
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to create user $PG_USER"
+		exit 4
+	else
+		log "[INFO] Successfully created user $PG_USER"
+	fi
+fi
+
+
+# Create symbolic link to make Postgres libs available
+libpq="libpq.so.rh-postgresql94-5"
+src="/opt/rh/rh-postgresql94/root/usr/lib64"
+dest="/usr/lib"
+dest64="/usr/lib64"
+
+export LD_LIBRARY_PATH=${src}/${libpq}
+
+if [[ -f ${dest}/${libpq} ]]; then
+	log "Symbolic link already created from ${src}/${libpq} to ${dest}/${libpq}"
+else
+	ln -s ${src}/${libpq} ${dest}/${libpq}
+	log "Created symbolic link from ${src}/${libpq} to ${dest}/${libpq}"
+fi
+
+if [[ -f ${dest64}/${libpq} ]]; then
+	log "Symbolic link already created from ${src}/${libpq} to ${dest64}/${libpq}"
+else
+	ln -s ${src}/${libpq} ${dest64}/${libpq}
+	log "Created symbolic link from ${src}/${libpq} to ${dest64}/${libpq}"
+fi
+
+
+# Create /home/postgres directory and update user/group
+if [ ! -d $PG_HOME ]
+then
+	log "[DEBUG] Attempting to create $PG_HOME directory"
+	mkdir -p $PG_HOME
+	RETVAL=$?
+	if [ $RETVAL -eq 0 ]
+	then
+		log "[DEBUG] Attempting to update ownership of $PG_HOME to $PG_USER:$PG_GROUP"
+		chown -R $PG_USER:$PG_GROUP $PG_HOME
+		RETVAL=$?
+		if [ $RETVAL -ne 0 ]
+		then
+			 log "[ERROR] Failed to change ownership of directory $PG_HOME"
+			 exit 2
+		else
+			log "[INFO] Successfully changed ownership of directory $PG_HOME"
+		fi
+	else
+		log "[ERROR] Failed to create $PG_HOME"
+		exit 2
+	fi
+fi
+
+# Create /opt/ericsson/pgsql directory
+if [ ! -d $ERIC_PG_BASE_DIR ]
+then
+	log "[DEBUG] $ERIC_PG_BASE_DIR does not exist"
+
+	log "[DEBUG] Attempting to create $ERIC_PG_BASE_DIR directory"
+	mkdir -p $ERIC_PG_BASE_DIR
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to make $ERIC_PG_BASE_DIR"
+		exit 1
+	else
+		log "[INFO] Successfully created $ERIC_PG_BASE_DIR"
+	fi
+else
+	log "[INFO] $ERIC_PG_BASE_DIR is already created, installation proceeded"
+fi
+
+
+# Create /opt/ericsson/pgsql/install directory and change ownership to postgres:postgres
+if [ ! -d $INSTALL_DIR ]
+then
+	log "[DEBUG] $INSTALL_DIR does not exist"
+
+	log "[DEBUG] Attempting to create directory $INSTALL_DIR"
+	mkdir -p $INSTALL_DIR &>>$INSTALL_DIR/$LOG_FILE
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to create root Postgres directory $INSTALL_DIR"
+		exit 1
+	else
+		log "[INFO] Successfully created root Postgres directory $INSTALL_DIR"
+	fi
+
+	if [ `stat -c %U $INSTALL_DIR` != "$PG_USER" ]
+	then
+		log "[DEBUG] Attempting to change ownership of $INSTALL_DIR to $PG_USER:$PG_GROUP"
+		chown -R $PG_USER:$PG_GROUP $INSTALL_DIR &>>$INSTALL_DIR/$LOG_FILE
+		RETVAL=$?
+		if [ $RETVAL -ne 0 ]
+		then
+			log "[ERROR] Failed to change ownership of directory $INSTALL_DIR"
+			exit 1
+		else
+			log "[INFO] Successfully changed ownership of directory $INSTALL_DIR"
+		fi
+	fi
+else
+	log "[INFO] $INSTALL_DIR is already created, installation proceeded"
+fi
+
+
+# Create /opt/rh directory and change ownership to postgres:postgres
+if [ ! -d $PG_BASE_ROOT ]
+then
+	log "[DEBUG] Postgres binary directory for tar file $PGBASE_ROOT does not exist"
+
+	log "[DEBUG] Attempting to create directory $PG_BASE_ROOT"
+	mkdir -p $PG_BASE_ROOT &>>$PG_INSTALL/$LOG_FILE
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to make $PG_BASE_ROOT directory "
+		exit 6
+	else
+		log "[INFO] Successfully created directory $PG_BASE_ROOT"
+	fi
+
+	if [ `stat -c %U $PG_BASE_ROOT` != "$PG_USER" ]
+	then
+		log "[DEBUG] Attempting to change ownership of $PG_BASE_ROOT to $PG_USER:$PG_GROUP"
+		chown -R $PG_USER:$PG_GROUP  $PG_BASE_ROOT &>>$INSTALL_DIR/$LOG_FILE
+	fi
+fi
+
+
+# Create /opt/rh/rh-postgresql94/root/usr/bin directory and change ownership to postgres:postgres
+if [ ! -d $PG_ROOT ]
+then
+	log "[DEBUG] Postgres binary directory $PG_ROOT does not exist"
+
+	log "[DEBUG] Attempting to create directory $PG_ROOT"
+	mkdir -p $PG_ROOT &>>$PG_INSTALL/$LOG_FILE
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to make $PG_ROOT directory "
+		exit 5
+	else
+		log "[INFO] Successfully created $PG_ROOT directory"
+	fi
+
+	if [ `stat -c %U $PG_ROOT` != "$PG_USER" ]
+	then
+		log "[DEBUG] Attempting to change ownership of $PG_ROOT to $PG_USER:$PG_GROUP"
+		chown -R $PG_USER:$PG_GROUP $PG_ROOT &>>$INSTALL_DIR/$LOG_FILE
+	fi
+fi
+
+
+# Create /ericsson/postgres/data directory and change ownership to postgres:postgres
+if [ ! -d $PG_DATA_DIR ]
+then
+	log "[DEBUG] $PG_DATA_DIR does not exist"
+
+	log "[DEBUG] Attempting to create $PG_DATA_DIR"
+	mkdir -p $PG_DATA_DIR
+	RETVAL=$?
+	if [ $RETVAL -ne 0 ]
+	then
+		log "[ERROR] Failed to make $PG_DATA_DIR"
+		exit 1
+	else
+		log "[INFO] Successfully created directory $PG_DATA_DIR"
+	fi
+
+	if [ `stat -c %U $PG_DATA_DIR` != "$PG_USER" ]
+	then
+		log "[DEBUG] Attempting to change ownership of $PG_DATA_DIR to $PG_USER:$PG_GROUP"
+		chown -R $PG_USER:$PG_GROUP $PG_DATA_DIR
+		RETVAL=$?
+		if [ $RETVAL -ne 0 ]
+		then
+			log "[ERROR] Failed to change ownership of directory $PG_DATA_DIR"
+			exit 2
+		else
+			log "[INFO] Successfully changed ownership of $PG_DATA_DIR"
+		fi
+	fi
+
+	semanage fcontext -a -t postgresql_db_t "$PG_DATA_DIR(/.*)?"
+else
+	log "[INFO] $PG_DATA_DIR is already created, installation proceeded"
+fi
+
+
+# Update Postgres SELinux Policies
+log "[DEBUG] Attempting to execute the SELinux policy for Postgres using $PG_LINUX_POLICY"
+$SEMODULE -i $PG_LINUX_POLICY
+RETVAL=$?
+if [ $RETVAL -ne 0 ]
+then
+	log "[ERROR] Failed to execute SELinux policy for Postgres"
+else
+	log "[INFO] SELinux policy set using $PG_LINUX_POLICY"
+fi
+
+
+# Create directories which will be used for deploying files on the system
+log "[DEBUG] Creating /opt/ericsson/pgsql/etc directory"
+mkdir -p /opt/ericsson/pgsql/etc
+log "[DEBUG] Changing ownership of /opt/ericsson/pgsql/etc to postgres:postgres"
+chown postgres:postgres /opt/ericsson/pgsql/etc
+log "[DEBUG] Changing SELinux policy of /opt/ericsson/pgsql/etc"
+semanage fcontext -a -t postgresql_db_t "/opt/ericsson/pgsql/etc(/.*)?"
+
+log "[DEBUG] Creating /opt/rh/rh-postgresql94/root/var/run directory"
+mkdir -p /opt/rh/rh-postgresql94/root/var/run
+log "[DEBUG] Changing ownership of /opt/rh/rh-postgresql94/root/var/run"
+chown postgres:postgres /opt/rh/rh-postgresql94/root/var/run
+
+log "[DEBUG] Creating /opt/rh/rh-postgresql94/root/var/lib/pgsql directory"
+mkdir -p /opt/rh/rh-postgresql94/root/var/lib/pgsql
+log "[DEBUG] Changing ownership of /opt/rh/rh-postgresql94/root/var/lib/pgsql to postgres:postgres"
+chown postgres:postgres /opt/rh/rh-postgresql94/root/var/lib/pgsql
+
+log "[DEBUG] Creating /opt/rh/rh-postgresql94/root/var/lock/subsys directory"
+mkdir -p /opt/rh/rh-postgresql94/root/var/lock/subsys
+log "[DEBUG] Changing ownership of /opt/rh/rh-postgresql94/root/var/lock/subsys to postgres:postgres"
+chown postgres:postgres /opt/rh/rh-postgresql94/root/var/lock/subsys
+
+log "[DEBUG] Creating /opt/rh/rh-postgresql94/root/var/lib/pgsql/data directory"
+mkdir -p /opt/rh/rh-postgresql94/root/var/lib/pgsql/data
+log "[DEBUG] Changing ownership of /opt/rh/rh-postgresql94/root/var/lib/pgsql/data to postgres:postgres"
+chown postgres:postgres /opt/rh/rh-postgresql94/root/var/lib/pgsql/data
+
+log "[DEBUG] Creating /opt/rh/rh-postgresql94/root/etc/sysconfig/pgsql directory"
+mkdir -p /opt/rh/rh-postgresql94/root/etc/sysconfig/pgsql
+log "[DEBUG] Changing ownership of /opt/rh/rh-postgresql94/root/etc/sysconfig/pgsql to postgres:postgres"
+chown postgres:postgres /opt/rh/rh-postgresql94/root/etc/sysconfig/pgsql
+
+# Ensure applications don't break (hardcoded PSQL values in scripts)
+if [[ ! -f /opt/rh/postgresql92/root/usr/bin/psql ]]; then
+    log "[DEBUG] Creating /opt/rh/postgresql92/root/usr/bin directory"
+    mkdir -p /opt/rh/postgresql92/root/usr/bin
+    log "[DEBUG] Creating symbolic link from /opt/rh/rh-postgresql94/root/usr/bin/psql to /opt/rh/postgresql92/root/usr/bin/psql"
+    ln -s /opt/rh/rh-postgresql94/root/usr/bin/psql /opt/rh/postgresql92/root/usr/bin/psql
+fi
+
+log "[DEBUG] Creating /opt/rh/postgresql/bin directory"
+mkdir -p /opt/rh/postgresql/bin
+
+# Future proof PSQL client for applications
+if [[ ! -f /opt/rh/postgresql/bin/psql ]]; then
+    log "[DEBUG] Creating symbolic link from /opt/rh/rh-postgresql94/root/usr/bin/psql to /opt/rh/postgresql/bin/psql"
+    ln -s /opt/rh/rh-postgresql94/root/usr/bin/psql /opt/rh/postgresql/bin/psql
+fi
+
+# Future proof dropdb binary
+if [[ ! -f /opt/rh/postgresql/bin/dropdb ]]; then
+    log "[DEBUG] Creating symbolic link from /opt/rh/rh-postgresql94/root/usr/bin/dropdb to /opt/rh/postgresql/bin/dropdb"
+    ln -s /opt/rh/rh-postgresql94/root/usr/bin/dropdb /opt/rh/postgresql/bin/dropdb
+fi
+
+# Future proof createdb binary
+if [[ ! -f /opt/rh/postgresql/bin/createdb ]]; then
+    log "[DEBUG] Creating symbolic link from /opt/rh/rh-postgresql94/root/usr/bin/createdb to /opt/rh/postgresql/bin/createdb"
+    ln -s /opt/rh/rh-postgresql94/root/usr/bin/createdb /opt/rh/postgresql/bin/createdb
+fi
+
+# Add 10 min crontab to ensure if PGDATA gets 90% fill we create a flag for fls!
+if [[ ! -f /etc/cron.d/postgresql01_fs_monitor_daily.bsh ]]; then
+   touch /etc/cron.d/postgresql01_fs_monitor_daily.bsh
+   echo "*/10 * * * * root /opt/ericsson/pgsql/bin/fls_space_check.bsh" > /etc/cron.d/postgresql01_fs_monitor_daily.bsh
+fi
+
+# Add crontab that executes daily at 2am to log Failed Authentication Connections
+if [[ ! -f /etc/cron.d/postgresql01_failed_connections_daily.sh ]]; then
+   /bin/touch /etc/cron.d/postgresql01_failed_connections_daily.sh
+   /bin/chmod 700 /opt/ericsson/pgsql/util/failed_connections_logger.sh
+   /bin/echo "0 2 * * * root /opt/ericsson/pgsql/util/failed_connections_logger.sh" > /etc/cron.d/postgresql01_failed_connections_daily.sh
+   log "[DEBUG] Successfully Added Crontab: /etc/cron.d/postgresql01_failed_connections_daily.sh"
+fi
+
+exit 0

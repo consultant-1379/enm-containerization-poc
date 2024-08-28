@@ -1,0 +1,7 @@
+NAME=eric-enmsg-msfm
+SVC=msfm
+DEP=true
+REQUESTS=true
+REQUESTS_LIST=4Gi
+WAIT=true
+WAIT_LIST=neo4j,gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps

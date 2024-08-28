@@ -1,0 +1,3 @@
+version: "2"
+domain: lvsrouter
+repo: _/mnt/c/gocode/lvsrouter

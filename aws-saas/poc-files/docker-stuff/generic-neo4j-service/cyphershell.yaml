@@ -1,0 +1,113 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cyphershell-deployment
+spec:
+  selector:
+    matchLabels:
+      app: cyphershell
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: cyphershell
+    spec:
+#      initContainers:
+      containers:
+      - name: cyphershell
+        #image: armdocker.rnd.ericsson.se/proj-enmk8spoc/neo-cypher:0.0.4
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:cyphershell-alpine
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+#          - bash configure.sh;
+          - while true; do sleep 300;done;
+        env:
+          - name: NEO4J_BOLT_HOST
+            value: "graphdb-neo4j"
+          - name: NEO4J_BOLT_PORT
+            value: "7687"
+          - name: ADMIN_USER
+            value: "neo4j"
+          - name: ADMIN_PASSWORD
+            value: "Neo4jadmin123"
+        volumeMounts:
+          - name: users
+            mountPath: /config
+          - name: config-indexes
+            mountPath: /indexes
+          - name: pre-config
+            mountPath: /pre-config-custom-scripts
+          - name: post-config
+            mountPath: /post-config-custom-scripts
+        ports:
+          - containerPort: 35020
+          - containerPort: 55200
+          - containerPort: 42628
+          - containerPort: 47460
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 4447
+          - containerPort: 9999
+          - containerPort: 56164
+          - containerPort: 3528
+          - containerPort: 58156
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 55501
+          - containerPort: 55500
+          - containerPort: 35020
+          - containerPort: 44004
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009 
+          - containerPort: 58156
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 46000
+          - containerPort: 55601
+          - containerPort: 46002
+          - containerPort: 58171
+          - containerPort: 63165
+          - containerPort: 63166
+          - containerPort: 56162
+          - containerPort: 56163
+          - containerPort: 30200
+          - containerPort: 50559
+          - containerPort: 55181
+          - containerPort: 55200
+          - containerPort: 5445
+          - containerPort: 5455
+      volumes:
+        - name: config-indexes
+          configMap:
+            name: config-indexes
+        - name: users
+          configMap:
+            name: neo-users
+        - name: pre-config
+          configMap:
+            name: pre-config-script
+        - name: post-config
+          configMap:
+            name: post-config-script

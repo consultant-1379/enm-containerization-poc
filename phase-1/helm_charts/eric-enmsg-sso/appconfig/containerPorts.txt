@@ -1,0 +1,16 @@
+- containerPort: 8080
+- containerPort: 9990
+- containerPort: 9999
+- containerPort: 4447
+- containerPort: 7999
+- containerPort: 4320
+- containerPort: 8443
+- containerPort: 4445
+- containerPort: 12987
+- containerPort: 1699
+- containerPort: 8082
+- containerPort: 49342
+- containerPort: 2600
+- containerPort: 1699
+- containerPort: 40424
+- containerPort: 8009

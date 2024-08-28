@@ -1,0 +1,15 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: klvs-manager-rolebinding
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: klvs-manager-role
+subjects:
+- kind: ServiceAccount
+  name: klvs-service-account
+  namespace: default
+- kind: ServiceAccount
+  name: default
+  namespace: default

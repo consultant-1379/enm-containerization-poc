@@ -1,0 +1,11 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: msfm-ingress-l4-59001
+  annotations:
+    protocol: TCP
+    layer: L4
+spec:
+  backend:
+    serviceName: msfm-corba-service-59001
+    servicePort: 59001

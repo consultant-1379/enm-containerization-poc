@@ -1,0 +1,133 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: sso
+spec:
+  clusterIP: None
+  ports:
+    - name: jboss
+      port: 8080
+      targetPort: 8080
+    - name: jboss-secure
+      port: 8443
+      targetPort: 8443
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: sso
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sso
+spec:
+  selector:
+    matchLabels:
+      app: sso
+  replicas: 1
+  serviceName: sso
+  template:
+    metadata:
+      labels:
+        app: sso
+    spec:
+      initContainers:
+      - name: sso-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,ldap-local,jms01,sps -n default'
+      containers:
+      - name: sso
+        resources:
+          limits:
+            memory: "7Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-sso
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 9999
+          - containerPort: 4447
+          - containerPort: 7999
+          - containerPort: 4320
+          - containerPort: 8443
+          - containerPort: 4445
+          - containerPort: 12987
+          - containerPort: 1699
+          - containerPort: 8082
+          - containerPort: 49342
+          - containerPort: 2600
+          - containerPort: 1699
+          - containerPort: 40424
+          - containerPort: 8009
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/sso_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-hcdumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+          - name: nfs-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: nfs-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: nfs-home
+            mountPath: /ericsson/home
+          - name: nfs-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-hcdumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-configmgt
+          persistentVolumeClaim:
+            claimName: nfs-configmgt
+        - name: nfs-home
+          persistentVolumeClaim:
+            claimName: nfs-home
+        - name: nfs-upgind
+          persistentVolumeClaim:
+            claimName: nfs-upgind

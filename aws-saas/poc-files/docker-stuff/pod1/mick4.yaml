@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mick-4
+spec:
+  containers:
+  - name: mick-4
+    image: "appropriate/curl:latest"
+    ports:
+    - containerPort: 80
+    command: ["/bin/sh", "-c"]
+    args:
+      - wget http://10.0.0.24//enm/neo4j-java-driver-transport-bolt-extension-1.20.3-shaded.jar;cp neo4j-java-driver-transport-bolt-extension-1.20.3-shaded.jar /var/tmp/;while true; do sleep 300;done;
+
+

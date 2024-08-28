@@ -1,0 +1,24 @@
+global_defs {
+  vrrp_version 3
+}
+vrrp_instance VI_1 {
+    state BACKUP
+
+    interface {{ .iface}}
+    virtual_router_id {{ .vrid }}
+    priority 100
+    nopreempt
+    advert_int 1
+    unicast_src_ip {{ .ip }}
+
+    unicast_peer { 
+        {{ .peerIP }}
+    }
+
+    virtual_ipaddress { {{ range .vips }}
+    {{ . }}{{ end }}
+  }
+notify_master "/primary-backup.sh master"
+notify_backup "/primary-backup.sh backup"
+notify_fault "/primary-backup.sh fault"
+}

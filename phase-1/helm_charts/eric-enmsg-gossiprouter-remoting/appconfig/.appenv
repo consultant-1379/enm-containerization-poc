@@ -1,0 +1,5 @@
+NAME=eric-enmsg-gossiprouter-remoting
+SVC=gossiprouter-remoting
+DEP=true
+REQUESTS=true
+REQUESTS_LIST=2Gi

@@ -1,0 +1,30 @@
+- name: nfs-gp
+  configMap:
+    name: gpcloud
+- name: nfs-data
+  persistentVolumeClaim:
+    claimName: nfs-data
+- name: nfs-mdt
+  persistentVolumeClaim:
+    claimName: nfs-mdt
+- name: nfs-custom
+  persistentVolumeClaim:
+    claimName: nfs-custom
+- name: nfs-dumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps
+- name: nfs-dlms
+  persistentVolumeClaim:
+    claimName: nfs-dlms
+- name: nfs-batch
+  persistentVolumeClaim:
+    claimName: nfs-batch
+- name: nfs-norollback
+  persistentVolumeClaim:
+    claimName: nfs-norollback
+- name: nfs-shared
+  persistentVolumeClaim:
+    claimName: nfs-home
+- name: nfs-configmgt
+  persistentVolumeClaim:
+    claimName: nfs-configmgt

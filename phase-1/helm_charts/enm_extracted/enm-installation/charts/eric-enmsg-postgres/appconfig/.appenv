@@ -1,0 +1,10 @@
+NAME=eric-enmsg-postgres
+PERSIST=true
+PERSIST_LIST=ReadWriteOnce,2Gi
+WAIT=true
+WAIT_LIST=opendj
+SVC=postgres
+EXTRASVC=true
+ESVC_LIST=postgresql01
+STS=true
+PRIVILEGED=true

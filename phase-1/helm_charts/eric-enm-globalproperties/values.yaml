@@ -1,0 +1,21 @@
+## eric-enm-globalproperties image version
+
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+  replicas-eric-enm-globalproperties: 1
+  ingress:
+    enmhost:
+
+  enmProperties:
+    lb_external_port:
+
+ingress:
+  enmhost:
+
+enmProperties:
+  lb_external_port:
+  fm_external_vip:  
+  cm_external_vip:  
+  pm_external_vip:  

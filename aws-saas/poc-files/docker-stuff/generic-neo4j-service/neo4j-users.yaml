@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: neo-users
+data:
+  users-group-1: |-
+    [
+     { "username":"dps_user","password":"Neo4juser123","requirePasswordChange":false ,"role":"architect"},
+     { "username":"reader_user","password":"Neo4jreader123","requirePasswordChange":false ,"role":"reader"}
+    ]

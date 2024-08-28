@@ -1,0 +1,132 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: secserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: secserv
+    spec:
+      containers:
+      - name: secserv
+        resources:
+          requests:
+            memory: "6Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:secserv-rhel6jboss
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 22
+          - containerPort: 56450
+          - containerPort: 56453
+          - containerPort: 56422
+          - containerPort: 9990 
+          - containerPort: 46055
+          - containerPort: 56456
+          - containerPort: 57193
+          - containerPort: 8009 
+          - containerPort: 63178
+          - containerPort: 58156
+          - containerPort: 56430
+          - containerPort: 55631
+          - containerPort: 9999 
+          - containerPort: 8080 
+          - containerPort: 56433
+          - containerPort: 63218
+          - containerPort: 56403
+          - containerPort: 54200
+          - containerPort: 56409
+          - containerPort: 8090 
+          - containerPort: 8091 
+          - containerPort: 63228
+          - containerPort: 8092 
+          - containerPort: 8093 
+          - containerPort: 56415
+          - containerPort: 4447
+          - containerPort: 55501
+          - containerPort: 55500
+          - containerPort: 7687
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/secserv-config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-pmul
+            mountPath: /ericsson/ul_spectrum_files          
+          - name: pv-smrs
+            mountPath: /ericsson/tor/smrs
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment              
+          - name: pv-shared
+            mountPath: /ericsson/home             
+          - name: pv-custom
+            mountPath: /ericsson/custom           
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps                
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: pv-pmic1
+            mountPath: /ericsson/pmic1
+          - name: pv-pmic2
+            mountPath: /ericsson/pmic2
+          - name: pv-pmlinks
+            mountPath: /ericsson/symvol
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-pmul
+          persistentVolumeClaim:
+            claimName: pmul
+        - name: pv-smrs
+          persistentVolumeClaim:
+            claimName: smrs                             
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-upgind
+          persistentVolumeClaim:
+            claimName: upgind
+        - name: pv-pmic1
+          persistentVolumeClaim:
+            claimName: pmic1
+        - name: pv-pmic2
+          persistentVolumeClaim:
+            claimName: pmic2                    
+        - name: pv-pmlinks
+          persistentVolumeClaim:
+            claimName: pmlinks

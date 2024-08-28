@@ -1,0 +1,7 @@
+NAME=eric-enmsg-modelserv
+STS=true
+WAIT=true
+WAIT_LIST=jms01
+SVC=models
+LIMITS=true
+LIMITS_LIST=10Gi

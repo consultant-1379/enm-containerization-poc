@@ -1,0 +1,91 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<configEntity xmlns="http://www.ericsson.com/oss/itpf/deployment/dst/descriptor">
+  <description>jmsserver loadDrivers defination for application service group</description>
+  <singleton>true</singleton>
+  <scaleUnit>
+    <loadDrivers>
+      <loadDriver name="jmsDestinationName" description="Name of the JMS destination" />
+      <loadDriver name="jmsDestinationType" description="JMS destination type (Queue/Topic)" />
+      <loadDriver name="jmsDestinationSizeBytes" description="Size of the Queue/Topic required in Bytes" />
+      <loadDriver name="jmsDestinationSizeSumOfBytes" description="sum Of all instances of Jms Destination Size Bytes from Applications" />
+      <loadDriver name="numberOfOpenAlarmLimit" description="Open Alarm storage limit 120,000 defined in FMPSA01-04" />
+    </loadDrivers>
+    <minimumUnit>
+      <profile>
+        <cpuCores>8</cpuCores>
+        <cpuMinutes>0</cpuMinutes>
+        <peakCpuMinutes>0</peakCpuMinutes>
+        <memory>22028</memory>
+      </profile>
+      <profileConversionFormulae>
+        <cpuCores>8</cpuCores>
+        <cpuMinutes></cpuMinutes>
+        <peakCpuMinutes></peakCpuMinutes>
+        <memory>(((defaultNumberOfThreadsResourceModel*defaultAllocatedStackSizeResourceModel)+maxMemoryBufferResourceModel+permGenMemoryResourceModel+operatingSystemMemoryResourceModel+baseQueueDimensionWithoutResourceModel+jmsDestinationSizeSumOfBytes)/1024/1024)</memory>
+      </profileConversionFormulae>
+    </minimumUnit>
+    <optimalUnit>
+      <profile>
+        <cpuCores>8</cpuCores>
+        <cpuMinutes>0</cpuMinutes>
+        <peakCpuMinutes>3378</peakCpuMinutes>
+        <memory>22028</memory>
+      </profile>
+      <profileConversionFormulae>
+        <cpuCores>8</cpuCores>
+        <cpuMinutes></cpuMinutes>
+        <peakCpuMinutes></peakCpuMinutes>
+        <memory>(((defaultNumberOfThreadsResourceModel*defaultAllocatedStackSizeResourceModel)+maxMemoryBufferResourceModel+permGenMemoryResourceModel+operatingSystemMemoryResourceModel+baseQueueDimensionWithoutResourceModel+jmsDestinationSizeSumOfBytes)/1024/1024)</memory>
+      </profileConversionFormulae>
+    </optimalUnit>
+  </scaleUnit>
+  <parameters>
+    <property name="baseQueueDimensionWithoutResourceModel" defaultValue="9999525000" description="Queue dimensioning before resource modesl introduced" usage="OPTIONAL" />
+    <property name="permGenMemoryResourceModel" defaultValue="536870912" description="Perm Gen Memory for JMS" usage="OPTIONAL" />
+    <property name="maxMemoryBufferResourceModel" defaultValue="1153433600" description="Direct Memory for JMS" usage="OPTIONAL" />
+    <property name="defaultAllocatedStackSizeResourceModel" defaultValue="1048576" description="Default Stack Size" usage="OPTIONAL" />
+    <property name="defaultNumberOfThreadsResourceModel" defaultValue="800" description="Number of threads" usage="OPTIONAL" />
+    <property name="operatingSystemMemoryResourceModel" defaultValue="1048576000" description="Memory Allocated for OS" usage="OPTIONAL" />
+    <property name="jmsJournalSizePerOpenAlarm" defaultValue="0.025" description="Journal Size in MB, per open alarm" usage="OPTIONAL" />
+    <property name="numberOfAverageLargeMessages" defaultValue="700" description="Number of average JMS large messages in large-messages directory." usage="OPTIONAL" />
+    <property name="jmsLargeMessageSize" defaultValue="1" description="JMS Large Message Size in MB" usage="OPTIONAL"/>
+    <property name="healthcheckPercentage" defaultValue="80" description="Buffer to account for ENM System Monitoring so that JMS filesystem does not fill up causing issue." usage="OPTIONAL" />
+  </parameters>
+  <deploymentDependencies>
+    <deploymentDependency>
+      <groupId>com.ericsson.oss.dimension</groupId>
+      <artifactId>jmsserver</artifactId>
+      <version></version>
+      <alias>JmsDestination</alias>
+      <qualifier>GLOBAL</qualifier>
+      <loadDriverConverters>
+        <loadConversionFormula dependencyLoadDriver="jmsDestinationSizeSumOfBytes">(jmsDestinationSizeBytes)<!--sum Of all instances of Jms Destination Size Bytes from Applicatiopns--></loadConversionFormula>
+      </loadDriverConverters>
+    </deploymentDependency>
+    <deploymentDependency>
+      <groupId>com.ericsson.nms.litp</groupId>
+      <artifactId>DeploymentManagementTool</artifactId>
+      <version></version>
+      <alias>NasFileSystemShare</alias>
+      <qualifier>GLOBAL</qualifier>
+      <loadDriverConverters>
+        <loadConversionFormula dependencyLoadDriver="nasfileSystemName">jms</loadConversionFormula>
+        <loadConversionFormula dependencyLoadDriver="nasFileSystemSpaceMB">500</loadConversionFormula>
+        <loadConversionFormula dependencyLoadDriver="nasFileSnapSpacePercentage">0</loadConversionFormula>
+      </loadDriverConverters>
+    </deploymentDependency>
+    <deploymentDependency>
+      <groupId>com.ericsson.oss.itpf.modeling</groupId>
+      <artifactId>Model-Deployment-Tool</artifactId>
+      <alias>dataVGFileSystemSpaceMB_jms</alias>
+      <qualifier>/opt/ericsson/tmp/model_deployment_tool</qualifier>
+      <loadDriverConverters>
+        <loadConversionFormula dependencyLoadDriver="dataVGFileSystemName">/ericsson/jms</loadConversionFormula>
+        <loadConversionFormula dependencyLoadDriver="dataVGFileSystemSpaceMB">
+         (((numberOfOpenAlarmLimit * jmsJournalSizePerOpenAlarm)+(numberOfAverageLargeMessages * jmsLargeMessageSize)) / healthcheckPercentage * 100 )
+        </loadConversionFormula>
+        <loadConversionFormula dependencyLoadDriver="dataVGFileSnapSpacePercentage">0</loadConversionFormula>
+       </loadDriverConverters>
+    </deploymentDependency>
+  </deploymentDependencies>
+</configEntity>

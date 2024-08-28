@@ -1,0 +1,12 @@
+- name: nfs-gp
+  configMap:
+    name: gpcloud
+- name: nfs-data
+  persistentVolumeClaim:
+    claimName: nfs-data
+- name: nfs-mdt
+  persistentVolumeClaim:
+    claimName: nfs-mdt
+- name: nfs-dumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps

@@ -1,0 +1,6 @@
+- name: port1
+  port: 34371
+  targetPort: 34371
+- name: port2
+  port: 36869
+  targetPort: 36869

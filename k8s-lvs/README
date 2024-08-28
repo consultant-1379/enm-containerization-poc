@@ -1,0 +1,27 @@
+
+
+
+#label the worker nodes for scheduling
+kubectl label nodes worker-p5n8q7nl-ccd-c7a39 type=worker-router
+#add rule on worker node
+
+sysctl -w net.ipv4.vs.conntrack=1 
+iptables -t nat -A POSTROUTING -o tunl0 -j MASQUERADE
+
+
+  ipvsadm -A -t 10.32.184.6:8080 -s sh
+  ipvsadm -a -t 10.32.184.6:8080 -r 192.168.50.20:8080 -m
+
+#modify entries on the keepalived.conf file at /etc/keepalived/keepalived.conf
+#modify entries on the conntrackd.conf file at /etc/conntrackd/conntrackd.conf
+#start keepalived
+/usr/sbin/keepalived
+#check ip addr list to see if the ip is assigned
+start conntrackd
+/usr/sbin/conntrackd -d
+
+
+ipvsadm -Ln
+
+ TCP  10.32.184.16:8080 sh
+  -> 192.168.50.20:8080             Masq    1      0          0

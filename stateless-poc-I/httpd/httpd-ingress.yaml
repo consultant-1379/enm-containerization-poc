@@ -1,0 +1,8 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: httpd-nodeport
+spec:
+  backend:
+    serviceName: httpd-nodeport
+    servicePort: 4447

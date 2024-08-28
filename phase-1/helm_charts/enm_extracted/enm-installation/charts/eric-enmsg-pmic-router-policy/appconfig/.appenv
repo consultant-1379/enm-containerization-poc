@@ -1,0 +1,7 @@
+NAME=eric-enmsg-pmic-router-policy
+DEP=true
+SVC=pmrouterpolicy
+WAIT=true
+WAIT_LIST=gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps
+REQUESTS=true
+REQUESTS_LIST=4Gi

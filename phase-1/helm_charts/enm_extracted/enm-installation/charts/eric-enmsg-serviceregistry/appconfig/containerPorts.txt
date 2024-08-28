@@ -1,0 +1,9 @@
+- containerPort: 8500
+- containerPort: 8443
+- containerPort: 8400
+- containerPort: 8301
+- containerPort: 8302
+- containerPort: 8600
+- containerPort: 53
+- containerPort: 80
+- containerPort: 443

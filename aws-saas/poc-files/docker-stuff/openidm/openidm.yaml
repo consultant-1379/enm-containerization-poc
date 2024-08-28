@@ -1,0 +1,106 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: openidm-deployment
+spec:
+  selector:
+    matchLabels:
+      app: openidm
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: openidm
+    spec:
+      containers:
+      - name: openidm
+        resources:
+          requests:
+            memory: "3Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:openidm-rhel6base
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 22
+          - containerPort: 36698
+          - containerPort: 8085
+          - containerPort: 52595
+          - containerPort: 40728
+          - containerPort: 12987
+          - containerPort: 8445
+          - containerPort: 8446
+          - containerPort: 37247
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: pv-pmic1
+            mountPath: /ericsson/pmic1
+          - name: pv-pmic2
+            mountPath: /ericsson/pmic2
+          - name: pv-pmlinks
+            mountPath: /ericsson/symvol
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-pmul
+          persistentVolumeClaim:
+            claimName: pmul
+        - name: pv-smrs
+          persistentVolumeClaim:
+            claimName: smrs
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-upgind
+          persistentVolumeClaim:
+            claimName: upgind
+        - name: pv-pmic1
+          persistentVolumeClaim:
+            claimName: pmic1
+        - name: pv-pmic2
+          persistentVolumeClaim:
+            claimName: pmic2
+        - name: pv-pmlinks
+          persistentVolumeClaim:
+            claimName: pmlinks

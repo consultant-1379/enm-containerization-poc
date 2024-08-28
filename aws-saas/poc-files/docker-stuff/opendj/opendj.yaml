@@ -1,0 +1,84 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opendj
+spec:
+  selector:
+    matchLabels:
+      app: opendj
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: opendj
+    spec:
+      containers:
+      - name: opendj
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:opendj-rhel6base
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 5432
+          - containerPort: 22
+          - containerPort: 4444
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/opendj_config.sh; while true; do sleep 300;done;
+            #args:
+            #- while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-cron
+            mountPath: /ericsson/vmcrons
+          - name: pv-opendj
+            mountPath: /ericsson/opendj
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-cron
+          persistentVolumeClaim:
+            claimName: vmcrons
+        - name: pv-opendj
+          persistentVolumeClaim:
+            claimName: opendj

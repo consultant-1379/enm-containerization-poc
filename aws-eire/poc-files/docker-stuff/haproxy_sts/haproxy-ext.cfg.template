@@ -1,0 +1,285 @@
+#---------------------------------------------------------------------
+# Example configuration for a possible web application.  See the
+# full configuration options online.
+#
+#   http://haproxy.1wt.eu/download/1.4/doc/configuration.txt
+#
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# Global settings
+#---------------------------------------------------------------------
+global
+    # to have these messages end up in /var/log/haproxy.log you will
+    # need to:
+    #
+    # 1) configure syslog to accept network log events.  This is done
+    #    by adding the '-r' option to the SYSLOGD_OPTIONS in
+    #    /etc/sysconfig/syslog
+    #
+    # 2) configure local2 events to go to the /var/log/haproxy.log
+    #   file. A line like the following can be added to
+    #   /etc/sysconfig/syslog
+    #
+    #    local2.*                       /var/log/haproxy.log
+    #
+    log         127.0.0.1 local2 warning
+    log-tag     haproxy-ext
+
+   # chroot      /var/lib/haproxy
+    pidfile     /var/run/haproxy.pid
+    maxconn     4000
+    user        haproxy
+    group       haproxy
+    daemon
+    ssl-server-verify none
+    tune.ssl.default-dh-param 2048
+    ssl-default-bind-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+    ssl-default-server-ciphers ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-AES256-GCM-SHA384:DHE-RSA-AES128-GCM-SHA256:DHE-DSS-AES128-GCM-SHA256:kEDH+AESGCM:ECDHE-RSA-AES128-SHA256:ECDHE-ECDSA-AES128-SHA256:ECDHE-RSA-AES128-SHA:ECDHE-ECDSA-AES128-SHA:ECDHE-RSA-AES256-SHA384:ECDHE-ECDSA-AES256-SHA384:ECDHE-RSA-AES256-SHA:ECDHE-ECDSA-AES256-SHA:DHE-RSA-AES128-SHA256:DHE-RSA-AES128-SHA:DHE-DSS-AES128-SHA256:DHE-RSA-AES256-SHA256:DHE-DSS-AES256-SHA:DHE-RSA-AES256-SHA:!aNULL:!eNULL:!EXPORT:!DES:!RC4:!3DES:!MD5:!PSK
+
+    # turn on stats unix socket
+    #stats socket /var/lib/haproxy/stats
+
+#---------------------------------------------------------------------
+# common defaults that all the 'listen' and 'backend' sections will
+# use if not designated in their block
+#---------------------------------------------------------------------
+defaults
+    mode                    http
+    log                     global
+    option                  httplog
+    option                  dontlognull
+    option http-server-close
+    option forwardfor       except 127.0.0.0/8
+    option                  redispatch
+    retries                 3
+    timeout http-request    10s
+    timeout queue           1m
+    timeout connect         10s
+    timeout client          1m
+    timeout server          1m
+    timeout http-keep-alive 10s
+    timeout check           10s
+    maxconn                 3000
+#    stats enable
+#    stats uri /haproxy?stats
+#    stats auth someuser:somepassword
+
+#---------------------------------------------------------------------
+# main frontend which proxys to the backends
+#---------------------------------------------------------------------
+#frontend  main
+#    bind MYHOSTNAME:80
+#    #IF_IPv6 bind HAPROXY_IPV6ADDRESS:80
+#    default_backend             apache_http
+
+
+#frontend secure
+#    bind MYHOSTNAME:443 ssl crt /ericsson/tor/data/certificates/haproxy/apacheserver.pem no-sslv3
+#    #IF_IPv6 bind HAPROXY_IPV6ADDRESS:443 ssl crt /ericsson/tor/data/certificates/haproxy/apacheserver.pem no-sslv3
+#    reqadd X-Forwarded-Proto:\ https
+#
+#    #Checks the path for Element Manger Thinlink services
+#    acl rdesktop_view path_beg /main /main/agent /include /images /styles /websocket
+#    acl rdesktop_view path_beg /main /main/agent /include /images /styles /websocket hdr(Upgrade) -i WebSocket
+#    acl rdesktop_view path_beg /main /main/agent /include /images /styles /websocket hdr_beg(Host) -i ws
+#    use_backend bk_elementmanager_desktop if rdesktop_view
+#
+#    #Checks the path for WINFIOL interactive services
+#    acl winfiol_app path_beg /winfiol-websocket
+#    acl winfiol_app path_beg /winfiol-websocket hdr(Upgrade) -i WebSocket
+#    acl winfiol_app path_beg /winfiol-websocket hdr_beg(Host) -i ws
+#    use_backend bk_winfiol_websockets if winfiol_app
+#
+#    # Checks the path for Node CLI service
+#    acl nodecli_app path_beg /nodecli-websocket
+#    acl nodecli_app path_beg /nodecli-websocket hdr(Upgrade) -i WebSocket
+#    acl nodecli_app path_beg /nodecli-websocket hdr_beg(Host) -i ws
+#    use_backend bk_nodecli_websocket if nodecli_app
+#
+#    #If the incoming request type is websocket
+#    acl ws_request hdr(Upgrade) -i WebSocket
+#    acl ws_request hdr_beg(Host) -i ws
+#
+#    #Checks the path for AMOS interactive services
+#    acl amos path_beg /terminal-websocket
+#    use_backend bk_amos_websockets if ws_request amos
+#
+#    #Checks the path for Scripting interactive shell
+#    acl scripting path_beg /scripting-terminal-ws
+#    use_backend bk_scripting_shell if ws_request scripting
+#
+#    default_backend             apache_https
+
+#frontend  maininternal haproxy:80
+#    default_backend             apache_http
+#
+#frontend secureinternal
+#    bind haproxy:443 ssl crt /ericsson/tor/data/certificates/haproxy/apacheserver.pem no-sslv3
+#    reqadd X-Forwarded-Proto:\ https
+#
+#    #Checks the path for WINFIOL interactive services
+#    acl winfiol_app path_beg /winfiol-websocket
+#    acl winfiol_app hdr(Upgrade) -i WebSocket
+#    acl winfiol_app hdr_beg(Host) -i ws
+#
+#    #Sends the request to the WINFIOL interactive backend
+#    use_backend bk_winfiol_websockets if winfiol_app
+#
+#    # Checks the path for Node CLI service
+#    acl nodecli_app path_beg /nodecli-websocket
+#    acl nodecli_app hdr(Upgrade) -i WebSocket
+#    acl nodecli_app hdr_beg(Host) -i ws
+#    use_backend bk_nodecli_websocket if nodecli_app
+#
+#    default_backend             apache_https
+
+
+frontend unsecuresso
+    bind sso.MYHOSTNAME:8080
+    default_backend             sso_http
+
+frontend securesso
+    bind sso.MYHOSTNAME:8443 ssl crt /ericsson/tor/data/certificates/haproxy/ssoserver.pem no-sslv3
+    reqadd X-Forwarded-Proto:\ https
+    default_backend             sso_https
+
+frontend iorfile
+    bind iorfile.MYHOSTNAME:80
+    default_backend             iorfile_http
+
+#---------------------------------------------------------------------
+# static backend for serving up images, stylesheets and such
+#---------------------------------------------------------------------
+
+#---------------------------------------------------------------------
+# round robin balancing between the various backends
+#---------------------------------------------------------------------
+#backend apache_http
+#    balance     roundrobin
+#    cookie iPlanetDirectoryPro prefix nocache
+#APACHE_BACKEND_NAMES_80    log global
+#
+#backend apache_https
+#    balance     roundrobin
+#    cookie iPlanetDirectoryPro prefix nocache
+#APACHE_BACKEND_NAMES_443    log global
+
+backend iorfile_http
+    balance     roundrobin
+    cookie iPlanetDirectoryPro prefix nocache
+BACKEND_NAMES_IORFILE    log global
+
+backend sso_http
+    balance     source
+    hash-type   consistent
+    cookie ssocookie insert nocache
+    option httpchk GET /heimdallr/haproxy_healthcheck.jsp HTTP/1.1\r\nHost:\ MYHOSTNAME
+SSO_BACKEND_NAMES_8080    log global
+
+backend sso_https
+    balance     source
+    hash-type   consistent
+    cookie ssocookie insert nocache
+    option httpchk GET /heimdallr/haproxy_healthcheck.jsp HTTP/1.1\r\nHost:\ MYHOSTNAME
+SSO_BACKEND_NAMES_8443    log global
+
+#---------------------------------------------------------------------
+# Backend for AMOS interactive
+# Load balancing algorithm used is leastconn
+# Use of leastconn algorithm is recommended where very long sessions are expected but is not very well suited for protocols using short sessions such as HTTP.
+#---------------------------------------------------------------------
+#backend bk_amos_websockets
+#    mode http
+#    balance leastconn
+#    option forwardfor
+#    option httpchk GET /terminal-websocket/vm/healthcheck
+#    timeout tunnel 60m
+#    reqadd X-Forwarded-Proto:\ https
+#    cookie iPlanetDirectoryPro prefix nocache
+#    default-server fall 1 rise 3
+#AMOS_WEBSOCKET_BACKEND
+#
+##---------------------------------------------------------------------
+## Backend for Scripting Shell
+## Load balancing algorithm used is leastconn
+##---------------------------------------------------------------------
+#backend bk_scripting_shell
+#    mode http
+#    balance leastconn
+#    option forwardfor
+#    option httpchk GET /scripting-terminal-ws/vm/healthcheck
+#    timeout tunnel 60m
+#    reqadd X-Forwarded-Proto:\ https
+#    cookie iPlanetDirectoryPro prefix nocache
+#    default-server fall 1 rise 3
+#SCRIPTING_WEBSOCKET_BACKEND
+#
+##---------------------------------------------------------------------
+## Backend for WINFIOL interactive
+## Load balancing algorithm used is leastconn
+## Use of leastconn algorithm is recommended where very long sessions are expected but is not very well suited for protocols using short sessions such as HTTP.
+##---------------------------------------------------------------------
+#backend bk_winfiol_websockets
+#    mode http
+#    balance leastconn
+#    option forwardfor
+#    timeout tunnel 60m
+#    reqadd X-Forwarded-Proto:\ https
+#    cookie iPlanetDirectoryPro prefix nocache
+#WINFIOL_WEBSOCKET_BACKEND
+#
+##---------------------------------------------------------------------
+## Backend for Element Manager
+## Load balancing algorithm used is leastconn
+## Use of leastconn algorithm is recommended where very long sessions are expected but is not very well suited for protocols using short sessions such as HTTP.
+##---------------------------------------------------------------------
+#backend bk_elementmanager_desktop
+#    mode http
+#    balance leastconn
+#    option httplog
+#    option forwardfor
+#    option abortonclose
+#    timeout tunnel 60m
+#    stick-table type string size 5m expire 10h
+#    stick on req.cook(rdesktopcookie)
+#    hash-type consistent
+#    cookie rdesktopcookie prefix nocache
+#    http-request set-header X-Forwarded-Port %[dst_port]
+#    http-request add-header X-Forwarded-Proto https
+#    redirect scheme https if !{ ssl_fc }
+#EM_DESKTOP_BACKEND
+#
+##---------------------------------------------------------------------
+## Backend for Node CLI
+##---------------------------------------------------------------------
+#backend bk_nodecli_websocket
+#    mode http
+#    balance roundrobin
+#    option forwardfor
+#    timeout tunnel 60m
+#    reqadd X-Forwarded-Proto:\ https
+#    cookie iPlanetDirectoryPro prefix nocache
+#NODECLI_WEBSOCKET_BACKEND
+#
+##---------------------------------------------------------------------
+## defaults for SSH Load Balancing 'listen' use
+##---------------------------------------------------------------------
+#defaults
+#    mode                    tcp
+#    timeout connect         10s
+#    timeout client          60m
+#    timeout server          60m
+#    balance                 leastconn
+##---------------------------------------------------------------------
+## Load Balancing of SSH Connections to AMOS and Scripting VMs
+##---------------------------------------------------------------------
+#listen ssh-balanced-amos
+#    bind MYHOSTNAME:5022
+#    option httpchk GET /terminal-websocket/vm/healthcheck
+#    SSH_AMOS_VM
+#
+#listen ssh-balanced-scripting
+#    bind MYHOSTNAME:5023
+#    option httpchk GET /scripting-terminal-ws/vm/healthcheck
+#    SSH_GS_VM

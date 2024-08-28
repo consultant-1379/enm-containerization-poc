@@ -1,0 +1,13 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: sso
+spec:
+  rules:
+  - host: sso-deployment-5d8689fb6b-wts4s
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: sso
+          servicePort: 4447

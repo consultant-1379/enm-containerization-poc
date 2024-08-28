@@ -1,0 +1,7 @@
+DEP=true
+NAME=eric-enmsg-pki-ra-service
+SVC=pkiraserv
+WAIT=true
+WAIT_LIST=gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps
+REQUESTS=true
+REQUESTS_LIST=4Gi

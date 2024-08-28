@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  labels:
+    enmnfs: "nfs-batch"
+  name: nfs-batch
+spec:
+  capacity:
+    storage: 4Gi
+  accessModes:
+  - ReadWriteMany
+  nfs:
+    server: 131.160.142.101
+    path: "/ericsson/batch"
+  persistentVolumeReclaimPolicy: Retain

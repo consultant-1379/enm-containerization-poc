@@ -1,0 +1,556 @@
+#!/bin/sh
+# chkconfig: 345 95 5
+# description: start/stop openidm
+# Source functions library, otherwise the status command below will fail.
+. /etc/init.d/functions
+
+JAVA_BIN=/usr/bin/java
+OPENIDM_HOME=/ericsson/openidm
+OPENIDM_USER=openidm
+OPENIDM_PID_FILE=$OPENIDM_HOME/.openidm.pid
+OPENIDM_LOG_DIR=/ericsson/log/openidm
+OPENIDM_LOG=${OPENIDM_LOG_DIR}/server.out
+OPENIDM_SAVE_LOG_DIR=/ericsson/tor/data/openidmlogs
+DATENOW=$(/bin/date +"%Y-%m-%d-%H:%M:%z")
+OPENIDM_OPTS="-Xms1536m -Xmx1536m -Dfile.encoding=UTF-8"
+SERVICE="/sbin/service"
+ROOTCA_CERT="/ericsson/tor/data/certificates/rootCA.pem"
+GLOBAL_PROPERTY_FILE="/ericsson/tor/data/global.properties"
+MYSQL_HOST="idmdbhost"
+MYSQL_ROOT_USER="root"
+MYSQL_OPENIDM_DATABASE="openidm"
+LOGGER_TAG="ENM_OPENIDM_SERVICE"
+OPENSSL=/usr/bin/openssl
+MYSQL=/usr/bin/mysql
+PSQL=/opt/rh/postgresql92/root/usr/bin/psql
+IDENMGMT_DATABASE_SCRIPT=/ericsson/idenmgmt/bin/install_idenmgmt_db.sh
+MKDIR=/bin/mkdir
+CP=/bin/cp
+SUBSYS_LOCK_FILE=/var/lock/subsys/openidm
+
+export OPENIDM_HOME
+CONFIGURE_SCRIPT=/ericsson/tmp/openidm/bin/install_openidm.sh
+INSTALLATION_VERIFICATION_SCRIPT=/ericsson/tmp/openidm/bin/verify_startup.sh
+
+# INFO logger
+info()
+{
+  logger -s -t ${LOGGER_TAG} -p user.notice "INFORMATION ( ${LOGGER_TAG} ): $@"
+}
+
+# ERROR logger
+error()
+{
+  logger -s -t ${LOGGER_TAG} -p user.err "ERROR ( ${LOGGER_TAG} ): $@"
+}
+
+# Copy server.out logs before installation shutdown
+copy_log_file() {
+  echo "OpenIDM installation has been terminated."
+  SERVEROUT_DIR="$OPENIDM_SAVE_LOG_DIR/server.out_${DATENOW}"
+  "$MKDIR" -p "$OPENIDM_SAVE_LOG_DIR"
+  "$MKDIR" -p "$SERVEROUT_DIR"
+  "$CP" -f "$OPENIDM_LOG" "$SERVEROUT_DIR"
+}
+
+installation_exists() {
+  local _install_exists=1
+  if [ -d ${OPENIDM_HOME}/bin ]; then
+    info "OpenIDM has been previously unpacked, not invoking configure script"
+    _install_exists=0
+  fi
+  return 1
+}
+
+# Call configuration script if not previously called
+configure_if_required() {
+  # Check if OpenIDM package is configured
+  if ! installation_exists; then
+    ${CONFIGURE_SCRIPT}
+    _ret_val=${?}
+    [ ${_ret_val} -eq 0 ] || ( error "OpenIDM configure script failed"; exit ${_ret_val} )
+  fi
+}
+
+# shutdown and clean up any left over openidm processes
+shutdown_openidm()
+{
+  echo "Shutting down openidm..." >> ${OPENIDM_LOG}
+  ${OPENIDM_HOME}/shutdown.sh >> ${OPENIDM_LOG} 2>&1
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "ERROR: ${OPENIDM_HOME}/shutdown.sh returned $rc" >> ${OPENIDM_LOG}
+  fi
+
+  # save logs (before waiting...)
+  /ericsson/tmp/openidm/bin/openidm_save_logs.sh
+
+  # clean up left over processes, just in case
+  wait_for_shutdown=20
+  pids=`ps -ef | grep openidm | grep "launcher.json" | awk '{print $2}'`
+
+  while [ "${wait_for_shutdown}" -gt 0 ] && [ -n "${pids}" ]; do
+    wait_for_shutdown=$((wait_for_shutdown - 1))
+    pids=`ps -ef | grep openidm | grep "launcher.json" | awk '{print $2}'`
+    sleep 1
+  done
+
+  if [ -n "${pids}" ]; then
+    for pid in ${pids}
+      do
+        kill -9 ${pid} > /dev/null 2>&1
+      done
+  fi
+  if [ -f $OPENIDM_PID_FILE ]; then
+    rm -f "$OPENIDM_PID_FILE"
+  fi
+
+  # clean up felix cache
+  rm -rf ${OPENIDM_HOME}/felix-cache/*
+
+  rm -rf $SUBSYS_LOCK_FILE
+}
+
+
+# shutdown and clean up any left over openidm processes
+shutdown_openidm_no_rm_file()
+{
+  echo "Shutting down openidm..." >> ${OPENIDM_LOG}
+  ${OPENIDM_HOME}/shutdown.sh >> ${OPENIDM_LOG} 2>&1
+  rc=$?
+  if [ $rc -ne 0 ]; then
+    echo "ERROR: ${OPENIDM_HOME}/shutdown.sh returned $rc" >> ${OPENIDM_LOG}
+  fi
+
+  # clean up left over processes, just in case
+  wait_for_shutdown=20
+  pids=`ps -ef | grep openidm | grep "launcher.json" | awk '{print $2}'`
+
+  while [ "${wait_for_shutdown}" -gt 0 ] && [ -n "${pids}" ]; do
+    wait_for_shutdown=$((wait_for_shutdown - 1))
+    pids=`ps -ef | grep openidm | grep "launcher.json" | awk '{print $2}'`
+    sleep 1
+  done
+
+  if [ -n "${pids}" ]; then
+    for pid in ${pids}
+      do
+        kill -9 ${pid} > /dev/null 2>&1
+      done
+  fi
+
+  # clean up felix cache
+  rm -rf ${OPENIDM_HOME}/felix-cache/*
+
+  rm -rf $SUBSYS_LOCK_FILE
+}
+
+#------------------------------------------------------------------------------#
+# Function:    applyLiveSyncFix                                                #
+# Description: Apply liveSync fix                                              #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+applyLiveSyncFix()
+{
+    /ericsson/tmp/openidm/bin/reset_ldap_sync_token.sh 2>/dev/null &
+}
+
+#------------------------------------------------------------------------------#
+# Function:    applyTimestampUpdater                                           #
+# Description: Apply timer which wait for database to be populeted by          #
+#              administrator user                                              #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+applyTimestampUpdater()
+{
+PSQLquery=$(PGPASSWORD=idenmgmt123 $PSQL -t -h postgresql01 -U idenmgmt -c "select count(*) from postgre_user where name='administrator'")
+
+  if [ "$PSQLquery" -eq 0 ]; then
+    /ericsson/tmp/openidm/bin/update_timestamp_on_empty_database.sh 2>/dev/null &
+  else
+    return 0
+  fi
+}
+
+#------------------------------------------------------------------------------#
+# Function:    checkPostgresDependencies                                       #
+# Description: Checks if postgres idenmgmt database is ready and up to date.   #
+# Upgrade idenmgmt database schema if needed.                                  #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+checkPostgresDependencies()
+{
+    $IDENMGMT_DATABASE_SCRIPT
+    return $?
+}
+
+#------------------------------------------------------------------------------#
+# Function:    checkOpendjDependencies                                         #
+# Description: Checks if local OpenDJ is ready.                                #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+checkOpendjDependencies()
+{
+  if [ ! -r "${GLOBAL_PROPERTY_FILE}" ]; then
+    echo "ERROR: Cannot read ${GLOBAL_PROPERTY_FILE}" | tee -a  ${OPENIDM_LOG}
+    return 1
+  fi
+  source ${GLOBAL_PROPERTY_FILE}
+
+  local passkey=/ericsson/tor/data/idenmgmt/opendj_passkey
+
+  if [ -z $LDAP_ADMIN_PASSWORD ] || [ ! -r $passkey ]; then
+    info "Cannot check OpenDJ password. Missing passkey file or cannot source password from global.properties"
+    return 1
+  fi
+  local password=`echo $LDAP_ADMIN_PASSWORD | $OPENSSL enc -a -d -aes-128-cbc -salt -kfile $passkey`
+
+  info "Checking the opendj dependency "
+  local iterator=0
+  while [ $iterator -lt 24 ]
+  do
+
+  if  [ -z "$LDAP_ADMIN_CN" ] || [ -z $COM_INF_LDAP_PORT ] || [ -z $COM_INF_LDAP_ROOT_SUFFIX ] || [ ! -r $ROOTCA_CERT ]; then
+    info "Cannot check OpenDJ connection. Missing passkey file or cannot source data from global.properties"
+    return 1
+
+  fi
+
+if [[ iterator  -lt 12 ]]; then
+    result=$(curl -s -u "$LDAP_ADMIN_CN":$password --cacert $ROOTCA_CERT ldaps://ldap-local:$COM_INF_LDAP_PORT/$COM_INF_LDAP_ROOT_SUFFIX | grep -o -E "DN: $COM_INF_LDAP_ROOT_SUFFIX" | wc -l)
+    else
+    result=$(curl -s -u "$LDAP_ADMIN_CN":$password --cacert $ROOTCA_CERT ldaps://ldap-remote:$COM_INF_LDAP_PORT/$COM_INF_LDAP_ROOT_SUFFIX | grep -o -E "DN: $COM_INF_LDAP_ROOT_SUFFIX" | wc -l)
+fi
+
+    if [[ $result -eq 1 ]]; then
+      echo "Check passed, respond from OpenDJ successfully received" | tee -a  $OPENIDM_LOG
+      info "Check passed, respond from OpenDJ successfully received"
+      return 0
+    fi
+      echo "Cannot connect to local ldap server, OpenDJ is not ready" | tee -a  $OPENIDM_LOG
+      info "Cannot connect to local ldap server, OpenDJ is not ready"
+
+    echo "Waiting 10 seconds for local OpenDJ to be running and ready" | tee -a  $OPENIDM_LOG
+    info "Waiting 10 seconds for local OpenDJ to be running and ready"
+    sleep 10
+    iterator=`expr $iterator + 1`
+  done
+
+  echo "Dependency check for local opendj has failed. OpenIDM cannot start" | tee -a  $OPENIDM_LOG
+  error "Dependency check for local opendj has failed. OpenIDM cannot start"
+  return 1
+}
+
+#------------------------------------------------------------------------------#
+# Function:    checkMysqlDependencies                                          #
+# Description: Checks connection to mysql and openidm database.                #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+checkMysqlDependencies() {
+  if [ ! -r "${GLOBAL_PROPERTY_FILE}" ]; then
+    echo "ERROR: Cannot read ${GLOBAL_PROPERTY_FILE}" | tee -a  $OPENIDM_LOG
+    return 1
+  fi
+  source ${GLOBAL_PROPERTY_FILE}
+
+  local passkey=/ericsson/tor/data/idenmgmt/idmmysql_passkey
+  password=`echo $idm_mysql_admin_password | $OPENSSL enc -a -d -aes-128-cbc -salt -kfile $passkey`
+  info "Checking mysql dependency ..."
+  local iterator=0
+
+   if  [ -z "$MYSQL_ROOT_USER" ] || [ -z $MYSQL_HOST ] || [ -z $MYSQL_OPENIDM_DATABASE ] ; then
+    info "Cannot check OpenDJ connection. Missing passkey file or cannot source data from global.properties"
+    return 1
+  fi
+
+  while [ $iterator -lt 12 ]
+  do
+    $MYSQL --user=$MYSQL_ROOT_USER --host=$MYSQL_HOST --password=$password --execute=exit $MYSQL_OPENIDM_DATABASE
+    if [[ $? -eq 0 ]]; then
+      echo "Check passed, respond from MySQL successfully received" | tee -a  $OPENIDM_LOG
+      info "Check passed, respond from MySQL successfully received"
+      return 0
+    fi
+    echo "Cannot connect to MySQL database" | tee -a  $OPENIDM_LOG
+    info "Cannot connect to MySQL database"
+
+    echo "Waiting 10 seconds for MySQL to be running and ready" | tee -a  $OPENIDM_LOG
+    info "Waiting 10 seconds for MySQL to be running and ready"
+    sleep 10
+    iterator=`expr $iterator + 1`
+  done
+
+  echo "Dependency check failed for MySQL. OpenIDM cannot start" | tee -a  $OPENIDM_LOG
+  error "Dependency check failed for MySQL. OpenIDM cannot start"
+  return 1
+}
+
+sleep_until_config_store_available()
+{
+  LOOP_CTR=36
+  LOOP_CTR_ORIG=${LOOP_CTR}
+  SLEEP_INTERVAL=5
+  info "Waiting until ${GLOBAL_PROPERTY_FILE} is available"
+  until [ -r ${GLOBAL_PROPERTY_FILE} ]; do
+    info "${GLOBAL_PROPERTY_FILE} not available, waiting for ${SLEEP_INTERVAL}s ${LOOP_CTR} more times"
+    if [ ${LOOP_CTR} -gt 0 ]; then
+      sleep ${SLEEP_INTERVAL}
+    else
+      info "${GLOBAL_PROPERTY_FILE} not available in `expr ${LOOP_CTR_ORIG} \* ${SLEEP_INTERVAL}`s, cannot continue but exiting with 0"
+      info "If the ${GLOBAL_PROPERTY_FILE} becomes available later, run 'service openidm restart' to install"
+      exit 0
+    fi
+    let LOOP_CTR=LOOP_CTR-1
+  done
+  info "${GLOBAL_PROPERTY_FILE} is available, continuing"
+}
+
+#------------------------------------------------------------------------------#
+# Function:    updateAdministratorAndPosixGroupForLiveSync                     #
+# Description: Updates change_timestamp for administrator in PostgreSQL so     #
+#              that LiveSync sees the changes                                  #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+updateAdministratorAndPosixGroupForLiveSync() {
+
+info "Updating administrator timestamp and posix group"
+info "Check if SYSTEMCONTRACTORDBACCOUNT record exists in MySQL"
+
+local passkey=/ericsson/tor/data/idenmgmt/idmmysql_passkey
+  password=`echo $idm_mysql_admin_password | $OPENSSL enc -a -d -aes-128-cbc -salt -kfile $passkey`
+
+tokenQuery=`$MYSQL -s -N --user=$MYSQL_ROOT_USER --host=$MYSQL_HOST --password=$password $MYSQL_OPENIDM_DATABASE --execute="SELECT count(*) FROM genericobjects WHERE objectid='SYSTEMCONTRACTORDBACCOUNT'"`
+PSQLquery=$(PGPASSWORD=idenmgmt123 $PSQL -t -h postgresql01 -U idenmgmt -c "select count(*) from postgre_user where name='administrator'")
+
+  if [ "$tokenQuery" -eq 0 ]; then
+      getObjecttypesQuery=`$MYSQL -s -N --user=$MYSQL_ROOT_USER --host=$MYSQL_HOST --password=$password $MYSQL_OPENIDM_DATABASE --execute="SELECT id FROM objecttypes WHERE objecttype = 'synchronisation/pooledSyncStage'"`
+      info "SYSTEMCONTRACTORDBACCOUNT missing, adding this record to MySQL"
+      echo "SYSTEMCONTRACTORDBACCOUNT missing, adding this record to MySQL" | tee -a  $OPENIDM_LOG
+
+         if [[ "${getObjecttypesQuery}" -eq 0 ]]; then
+            error "Failed to find synchronisation/pooledSyncStage in MySQL"
+            echo "Failed to find synchronisation/pooledSyncStage in MySQL" | tee -a  $OPENIDM_LOG
+         fi
+
+     if [ "$PSQLquery" -eq 0 ]; then
+      info "SYSTEMCONTRACTORDBACCOUNT missing, adding this record to MySQL"
+      echo "SYSTEMCONTRACTORDBACCOUNT missing, adding this record to MySQL" | tee -a  $OPENIDM_LOG
+         getDataQuery=$(PGPASSWORD=idenmgmt123 $PSQL -t -h postgresql01  -U idenmgmt -c "SELECT now()")
+        if [[ -z "${getDataQuery}" ]]; then
+            error "Failed to get date from PostgreSQL"
+            echo "Failed to get date from PostgreSQL" | tee -a  $OPENIDM_LOG
+        fi
+      else
+        #This date is year old because token date must be older than administrator date
+        getDataQuery=$(PGPASSWORD=idenmgmt123 $PSQL -t -h postgresql01  -U idenmgmt -c "SELECT now() -interval '1' year")
+         if [[ -z "${getDataQuery}" ]]; then
+             error "Failed to get old date from PostgreSQL"
+             echo "Failed to get old date from PostgreSQL" | tee -a  $OPENIDM_LOG
+         fi
+      fi
+
+    TMP_SQL_SCRIPT=$INST_TMP/localPassScr.sq
+
+    fullobject={\"connectorData\":{\"syncToken\":\"${getDataQuery}\",\"nativeType\":\"string\"},\"_id\":\"SYSTEMCONTRACTORDBACCOUNT\",\"_rev\":\"1\"}
+
+cat << EOF > $TMP_SQL_SCRIPT
+INSERT INTO genericobjects (objecttypes_id, objectid, rev, fullobject)
+VALUES ('${getObjecttypesQuery}', "SYSTEMCONTRACTORDBACCOUNT", "1", '${fullobject}');
+quit
+EOF
+    $MYSQL --user=$MYSQL_ROOT_USER --host=$MYSQL_HOST --password=$password $MYSQL_OPENIDM_DATABASE <$TMP_SQL_SCRIPT
+     if [[ $? -eq 1  || -z $? ]]; then
+        error "Failed to insert SYSTEMCONTRACTORDBACCOUNT in MySQL"
+        echo "Failed to insert SYSTEMCONTRACTORDBACCOUNT in MySQL" | tee -a  $OPENIDM_LOG
+     fi
+    rm -f $TMP_SQL_SCRIPT
+  fi
+
+   ADMINISTRATOR_UPDATE_SQL="update postgre_user set firstname = firstname where name = 'administrator';"
+   POSIX_GROUP_UPDATE_TIMESTAMP="update posix_group set change_timestamp = now();"
+   SQL_UPDATE_OUT=$INST_TMP/updateAdmin.out
+     PGPASSWORD=idenmgmt123 $PSQL -h postgresql01  -U idenmgmt -c "$ADMINISTRATOR_UPDATE_SQL" idenmgmt >>$SQL_UPDATE_OUT 2>&1
+     if [[ $? =~ .*ERROR.* ]]; then
+        error "Failed to update posix_group timestamp in PostgreSQL"
+         echo "Failed to update posix_group timestamp in PostgreSQL" | tee -a  $OPENIDM_LOG
+     fi
+     PGPASSWORD=idenmgmt123 $PSQL -h postgresql01  -U idenmgmt -c "$POSIX_GROUP_UPDATE_TIMESTAMP" idenmgmt >>$SQL_UPDATE_OUT 2>&1
+     if [[ $? =~ .*ERROR.* ]]; then
+        error "Failed to update administrator timestamp in PostgreSQL"
+         echo "Failed to update administrator timestamp in PostgreSQL" | tee -a  $OPENIDM_LOG
+     fi
+
+   info "Updating administrator timestamp finished successfully"
+
+}
+
+#------------------------------------------------------------------------------#
+# Function:    checkOpenIDMStatus                                              #
+# Description: Checks whether OpenIDM started correctly                        #
+# Parameters:  nothing                                                         #
+# Returns:     0  success                                                      #
+#              1  failure                                                      #
+#------------------------------------------------------------------------------#
+checkOpenIDMStatus()
+{
+  if [ ! -r "${GLOBAL_PROPERTY_FILE}" ]; then
+    error "Cannot read ${GLOBAL_PROPERTY_FILE}"
+    return 1
+  fi
+  source ${GLOBAL_PROPERTY_FILE}
+
+  local passkey=/ericsson/tor/data/idenmgmt/openidm_passkey
+
+  if [ -z $openidm_admin_password ] || [ ! -r $passkey ]; then
+    error "Cannot check OpenIDM administrator password. Missing passkey file or cannot source password from global.properties"
+    exit 1
+  fi
+  local password=`echo $openidm_admin_password | $OPENSSL enc -a -d -aes-128-cbc -salt -kfile $passkey`
+
+  local status=`curl -X GET -k -H "X-OpenIDM-Username: openidm-admin" -H "X-OpenIDM-Password: $password" "https://localhost:8445/openidm/info/ping" 2>/dev/null | grep ACTIVE_READY | wc -l`
+  if [ $status -eq 1 ]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
+# Set JDK Logger config file if it is present and an override has not been issued
+LOGGING_CONFIG="-Djava.util.logging.config.file=$OPENIDM_HOME/conf/logging.properties"
+CLASSPATH="$OPENIDM_HOME/bin/*:$OPENIDM_HOME/framework/*"
+JAVA_OPTS="-XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=/ericsson/enm/dumps/openidm_${DATENOW}.hprof  -XX:OnOutOfMemoryError=\"kill -9 %p\" -XX:OnError=\"kill -3 %p\""
+
+START_CMD="nohup $JAVA_BIN $LOGGING_CONFIG $JAVA_OPTS $OPENIDM_OPTS \
+                -Djava.endorsed.dirs=$JAVA_ENDORSED_DIRS \
+                -classpath $CLASSPATH \
+                -Dopenidm.system.server.root=$OPENIDM_HOME \
+                -Djava.awt.headless=true \
+                -Dcom.sun.management.jmxremote \
+                -Ds=openidm \
+                org.forgerock.commons.launcher.Main -c bin/launcher.json  \
+                   >> ${OPENIDM_LOG} 2>&1 &"
+
+case "${1}" in
+start|restart)
+
+    # uncomment echo's to debug
+    #   echo $START_CMD
+    #   echo "check logfile:  cat  /ericsson/log/openidm/server.out"
+    logger "Starting openidm service"
+    [ ! -d ${OPENIDM_LOG_DIR} ] && mkdir -p ${OPENIDM_LOG_DIR}
+    chown -R openidm:jboss ${OPENIDM_LOG_DIR}
+    >> ${OPENIDM_LOG}
+    chown openidm:jboss ${OPENIDM_LOG}
+    if [ "${1}" = "restart" ]; then
+      shutdown_openidm
+    else
+      pids=`ps -ef | grep openidm | grep "launcher.json" | awk '{print $2}'`
+      if [ -n "${pids}" ]; then
+        echo "openidm already running with pid(s): ${pids}" | tee -a ${OPENIDM_LOG}
+        exit 0
+      fi
+    fi
+
+    logger "Ensuring Config Store is available"
+    sleep_until_config_store_available
+
+    # check if mysql is running
+    checkMysqlDependencies
+    if [ $? -ne 0 ]; then
+      copy_log_file
+      exit 1
+    fi
+
+    # check if opendj is runnin
+    checkOpendjDependencies
+    if [ $? -ne 0 ]; then
+      copy_log_file
+      exit 1
+    fi
+
+    # check if postgres is running, ready and up to date
+    checkPostgresDependencies
+    if [ $? -ne 0 ]; then
+      copy_log_file
+      error "Postgres database script failed."
+    fi
+
+    # clean up felix cache
+    rm -rf ${OPENIDM_HOME}/felix-cache/*
+
+    #if starting for first time idm is installed and configured
+    configure_if_required
+    if [ $? -ne 0 ]; then
+      exit 1
+    fi
+
+    cd ${OPENIDM_HOME}
+    echo "Starting openidm..." >> ${OPENIDM_LOG}
+    su $OPENIDM_USER -c "$START_CMD eval echo \$\! > $OPENIDM_PID_FILE"
+
+    if [ -e "/tmp/openidm/openidm_log_name" ]; then
+        $INSTALLATION_VERIFICATION_SCRIPT
+    fi
+    info "Waiting 40 seconds to confirm that OpenIDM has started"
+    #Checking if OpenIDM started correctly within 40 seconds, if not trying restart
+    sleep 40
+    checkOpenIDMStatus
+    if [ $? -ne 0 ]; then
+        info "OpenIDM not started within 40 seconds - trying to start again"
+        shutdown_openidm_no_rm_file
+        sleep 10
+        echo "Starting openidm - retry..." >> ${OPENIDM_LOG}
+        su $OPENIDM_USER -c "$START_CMD eval echo \$\! > $OPENIDM_PID_FILE"
+    fi
+    touch $SUBSYS_LOCK_FILE
+
+    applyTimestampUpdater
+    applyLiveSyncFix
+    info "OpenIDM has started"
+    updateAdministratorAndPosixGroupForLiveSync
+    exit ${?}
+  ;;
+stop)
+    shutdown_openidm
+    exit 0
+  ;;
+monitor | status)
+  status -p ${OPENIDM_PID_FILE} openidm
+  if [ $? -ne 0 ]; then
+    exit 1
+  fi
+  ;;
+meta-data)
+    cat <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+
+<resource-agent name="OpenIDM">
+<version>3.1.0</version>
+
+<longdesc lang="en">
+OpenIDM is an open standards based identity management solution that is used in ENM with whole package frome ForgeRock.
+</longdesc>
+<shortdesc lang="en">OpenIDM instance of identity management in ENM.</shortdesc>
+
+</resource-agent>
+END
+    exit 0
+    ;;
+*)
+  echo "Usage: openidm { start | stop | status | restart | monitor | meta-data }"
+  exit 1
+  ;;
+esac

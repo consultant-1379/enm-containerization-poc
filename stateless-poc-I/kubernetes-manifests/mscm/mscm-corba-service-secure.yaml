@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mscm-corba-service-secure
+  labels:
+    app: mscm
+spec:
+  type: NodePort
+  ports:
+  - port: 58170 #This is to clusterip (eg 10.105.7.197) (not used)
+    targetPort: 58170 # This is to pod ip (eg 192.168.4.195)
+    protocol: TCP
+    name: corba-secure
+  selector:
+    app: mscm

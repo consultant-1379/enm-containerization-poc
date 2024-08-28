@@ -1,0 +1,26 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apachebrian-deployment
+spec:
+  selector:
+    matchLabels:
+      app: apache-brian
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: apache-brian
+    spec:
+      containers:
+      - name: apache-brian
+        resources:
+          requests:
+            memory: "4Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:apache-brian
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 8443

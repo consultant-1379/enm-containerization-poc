@@ -1,0 +1,6 @@
+dependencies:
+- name: app-b
+  repository: file://../app-b
+  version: 0.1.0
+digest: sha256:90846f15ea101342bcebc7478ce45c1fe3636dbe3b2fba204bc5727fe17e2cb3
+generated: 2018-07-11T11:01:30.099711089Z

@@ -1,0 +1,4 @@
+- containerPort: 22
+- containerPort: 5093
+- containerPort: 5099
+- containerPort: 4447

@@ -1,0 +1,15 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: apache-simple
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+spec:
+  rules:
+  - host: service.enmaas.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: apache-simple
+          servicePort: 80

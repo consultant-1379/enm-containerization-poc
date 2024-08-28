@@ -1,0 +1,51 @@
+- name: nfs-gp
+  configMap:
+    name: gpcloud
+- name: nfs-data
+  persistentVolumeClaim:
+    claimName: nfs-data
+- name: nfs-mdt
+  persistentVolumeClaim:
+    claimName: nfs-mdt
+- name: nfs-custom
+  persistentVolumeClaim:
+    claimName: nfs-custom
+- name: nfs-dumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps
+- name: nfs-dlms
+  persistentVolumeClaim:
+    claimName: nfs-dlms
+- name: nfs-batch
+  persistentVolumeClaim:
+    claimName: nfs-batch
+- name: nfs-norollback
+  persistentVolumeClaim:
+    claimName: nfs-norollback
+- name: nfs-configmgt
+  persistentVolumeClaim:
+    claimName: nfs-configmgt
+- name: nfs-shared
+  persistentVolumeClaim:
+    claimName: nfs-home
+- name: nfs-upgind
+  persistentVolumeClaim:
+    claimName: nfs-upgind
+- name: nfs-pmic1
+  persistentVolumeClaim:
+    claimName: nfs-pm1
+- name: nfs-pmic2
+  persistentVolumeClaim:
+    claimName: nfs-pm2
+- name: nfs-pmlinks
+  persistentVolumeClaim:
+    claimName: nfs-pmlinks
+- name: nfs-smrs
+  persistentVolumeClaim:
+     claimName: nfs-smrs
+- name: nfs-ddcdata
+  persistentVolumeClaim:
+    claimName: nfs-ddcdata
+- name: nfs-cron
+  persistentVolumeClaim:
+    claimName: nfs-cron

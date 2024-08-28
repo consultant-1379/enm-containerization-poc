@@ -1,0 +1,5 @@
+NAME=eric-enmsg-gossiprouter-cache
+DEP=true
+SVC=gossiprouter-cache
+REQUESTS=true
+REQUESTS_LIST=2Gi

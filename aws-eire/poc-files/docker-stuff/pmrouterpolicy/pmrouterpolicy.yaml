@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pmrouterpolicy-deployment
+spec:
+  selector:
+    matchLabels:
+      app: pmrouterpolicy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: pmrouterpolicy
+    spec:
+      containers:
+      - name: pmrouterpolicy
+#        resources:
+#          requests:
+#            memory: "6Gi"
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:pmrouterpolicy-rhel6jbossjava8
+        imagePullPolicy: Always
+#        livenessProbe:
+#          httpGet:
+#            port: 12987
+#          initialDelaySeconds: 300
+#          timeoutSeconds: 10
+#          periodSeconds: 30
+#          failureThreshold: 2
+        ports:
+          - containerPort: 8080
+          - containerPort: 8443
+          - containerPort: 9990
+          - containerPort: 9999
+          - containerPort: 4447
+          - containerPort: 45145  
+          - containerPort: 9990   
+          - containerPort: 3528   
+          - containerPort: 45513  
+          - containerPort: 8009   
+          - containerPort: 8301   
+          - containerPort: 44634  
+          - containerPort: 44379  
+          - containerPort: 12987
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/pmrouterpolicy_config.sh; while true; do sleep 10;done;
+        volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-netlog
+            mountPath: /ericsson/netlog
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-pm1
+            mountPath: /ericsson/pmic1
+          - name: pv-pm2
+            mountPath: /ericsson/pmic2
+          - name: pv-pmlinks
+            mountPath: /ericsson/symvol
+          - name: pv-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+          - name: pv-ddcdata
+            mountPath: /var/ericsson/ddc_data
+          - name: pv-smrs
+            mountPath: /ericsson/tor/smrs
+      volumes:
+        - name: pv-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-pm1
+          persistentVolumeClaim:
+            claimName: pmic1
+        - name: pv-pm2
+          persistentVolumeClaim:
+            claimName: pmic2
+        - name: pv-pmlinks
+          persistentVolumeClaim:
+            claimName: pmlinks
+        - name: pv-upgind
+          persistentVolumeClaim:
+            claimName: upgind
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-netlog
+          persistentVolumeClaim:
+            claimName: netlog
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-ddcdata
+          persistentVolumeClaim:
+            claimName: ddcdata
+        - name: pv-smrs
+          persistentVolumeClaim:
+            claimName: smrs

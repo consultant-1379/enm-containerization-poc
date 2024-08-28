@@ -1,0 +1,128 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wpserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: wpserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: wpserv
+    spec:
+      initContainers:
+      - name: service-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps -n default'
+      containers:
+      - name: wpserv
+        resources:
+          requests:
+            memory: "4Gi"
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-web-push-service
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 60
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 8080
+          - containerPort: 8443
+          - containerPort: 9990
+          - containerPort: 9999
+          - containerPort: 4447
+          - containerPort: 45145
+          - containerPort: 9990
+          - containerPort: 3528
+          - containerPort: 45513
+          - containerPort: 8009
+          - containerPort: 8301
+          - containerPort: 44634
+          - containerPort: 44379
+          - containerPort: 12987
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/wpserv_config.sh; while true; do sleep 10;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: nfs-data
+            mountPath: /ericsson/tor/data
+          - name: nfs-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: nfs-custom
+            mountPath: /ericsson/custom
+          - name: nfs-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: nfs-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: nfs-shared
+            mountPath: /ericsson/home
+          - name: nfs-ddcdata
+            mountPath: /var/ericsson/ddc_data
+          - name: nfs-norollback
+            mountPath: /ericsson/no_rollback
+          - name: nfs-batch
+            mountPath: /ericsson/batch
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: nfs-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: nfs-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: nfs-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: nfs-shared
+          persistentVolumeClaim:
+            claimName: nfs-home
+        - name: nfs-custom
+          persistentVolumeClaim:
+            claimName: nfs-custom
+        - name: nfs-dlms
+          persistentVolumeClaim:
+            claimName: nfs-dlms
+        - name: nfs-ddcdata
+          persistentVolumeClaim:
+            claimName: nfs-ddcdata
+        - name: nfs-norollback
+          persistentVolumeClaim:
+            claimName: nfs-norollback
+        - name: nfs-batch
+          persistentVolumeClaim:
+            claimName: nfs-batch
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wpserv
+spec:
+  ports:
+    - name: jboss
+      port: 8080
+      targetPort: 8080
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: wpserv

@@ -1,0 +1,57 @@
+Name:         kubernetes
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+Subsets:
+  Addresses:          10.0.10.12,10.0.10.3,10.0.10.5
+  NotReadyAddresses:  <none>
+  Ports:
+    Name   Port  Protocol
+    ----   ----  --------
+    https  6443  TCP
+
+Events:  <none>
+
+
+Name:         myservice
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+Subsets:
+Events:  <none>
+
+
+Name:         tcpserver
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+Subsets:
+  Addresses:          192.168.36.21
+  NotReadyAddresses:  <none>
+  Ports:
+    Name          Port  Protocol
+    ----          ----  --------
+    http          80    TCP
+    someothertcp  7070  TCP
+    sometcp       8080  TCP
+    https         443   TCP
+
+Events:  <none>
+
+
+Name:         tcpserver-nodeport
+Namespace:    default
+Labels:       <none>
+Annotations:  <none>
+Subsets:
+  Addresses:          192.168.36.21
+  NotReadyAddresses:  <none>
+  Ports:
+    Name          Port  Protocol
+    ----          ----  --------
+    http          80    TCP
+    someothertcp  7070  TCP
+    sometcp       8080  TCP
+    https         443   TCP
+
+Events:  <none>

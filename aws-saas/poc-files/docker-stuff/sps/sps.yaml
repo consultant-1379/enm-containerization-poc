@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sps-deployment
+spec:
+  selector:
+    matchLabels:
+      app: sps
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sps
+    spec:
+      containers:
+      - name: sps
+        resources:
+          requests:
+            memory: "4Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:sps-rhel6jboss
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+          - containerPort: 4447
+          - containerPort: 9990
+          - containerPort: 56400
+          - containerPort: 56401
+          - containerPort: 56402
+          - containerPort: 56406
+          - containerPort: 56408
+          - containerPort: 56412
+          - containerPort: 56413
+          - containerPort: 56414
+          - containerPort: 56418
+          - containerPort: 56419
+          - containerPort: 56420
+          - containerPort: 56407
+          - containerPort: 51088
+          - containerPort: 8009
+          - containerPort: 41610
+          - containerPort: 59309
+          - containerPort: 9999
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/sps_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-ddcdata
+            mountPath: /var/ericsson/ddc_data
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-ddcdata
+          persistentVolumeClaim:
+            claimName: ddcdata

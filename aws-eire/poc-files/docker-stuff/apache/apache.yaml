@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-simple
+spec:
+  selector:
+    matchLabels:
+      app: apache-simple
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: apache-simple
+    spec:
+      containers:
+      - name: apache-simple
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:rhel6basejava8
+        command: ["/bin/sh", "-c"]
+        args:
+          - while true; do sleep 300;done;
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache-simple
+spec:
+  selector:
+    app: apache-simple
+  ports:
+  - protocol: "TCP"
+    port: 80
+    targetPort: 80

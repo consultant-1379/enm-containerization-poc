@@ -1,0 +1,21 @@
+apiVersion: routing.lvsingress.ericsson.com/v1alpha1
+kind: LvsIngress
+metadata:
+  name: lvsingress-samba7
+spec:
+  virtualServiceIP: 10.32.184.59
+  backendService:
+    serviceName: tcpserver7
+    portMappings:
+       - lbPort: 8080
+         svcPort: 8080
+         protocol: tcp
+         sch: sh
+       - lbPort: 7070
+         protocol: tcp
+         svcPort: 7070
+         sch: rr
+
+
+
+         

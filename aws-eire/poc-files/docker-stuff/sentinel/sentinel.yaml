@@ -1,0 +1,78 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: sentinel
+spec:
+  selector:
+    matchLabels:
+      app: sentinel
+  serviceName: sentinel
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sentinel
+    spec:
+      containers:
+      - name: sentinel
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:sentinel-rhel6basejava8
+        imagePullPolicy: Always
+#        livenessProbe:
+#          httpGet:
+#            port: 12987
+#          initialDelaySeconds: 300
+#          timeoutSeconds: 10
+#          periodSeconds: 30
+#          failureThreshold: 2
+        ports:
+          - containerPort: 22
+          - containerPort: 5093
+          - containerPort: 5099
+          - containerPort: 4447
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/configure-sentinel.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-custom
+            mountPath: /ericsson/custom           
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps                
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-ddcdata
+            mountPath: /var/ericsson/ddc_data
+          - name: sentinel-lic
+            mountPath: /ericsson/sentinel_lic
+      volumes:
+        - name: pv-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-ddcdata
+          persistentVolumeClaim:
+            claimName: ddcdata
+  volumeClaimTemplates:
+    - metadata:
+        name: sentinel-lic
+      spec:
+        storageClassName: "gp2"
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

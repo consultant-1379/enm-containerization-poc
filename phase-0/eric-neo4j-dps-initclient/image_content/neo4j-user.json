@@ -1,0 +1,5 @@
+[
+     { "username":"dps_user","password":"Neo4juser123","requirePasswordChange":false ,"role":"architect"},
+     { "username":"reader_user","password":"Neo4jreader123","requirePasswordChange":false ,"role":"reader"}
+]
+

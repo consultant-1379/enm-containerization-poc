@@ -1,0 +1,18 @@
+apiVersion: enm.lvsrouter/v1
+kind: LvsIngress
+metadata:
+  name: lvsingress-sample
+spec:
+  # Add fields here
+  virtualServiceIP: 1.1.1.1.1
+  backendService:
+    serviceName: tcpserver
+    portMappings:
+       - lbPort: 8080
+         svcPort: 8080
+         protocol: tcp
+         sch: sh
+       - lbPort: 7070
+         protocol: tcp
+         svcPort: 7070
+         sch: rr

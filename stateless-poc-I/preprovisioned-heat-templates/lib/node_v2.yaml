@@ -1,0 +1,157 @@
+heat_template_version: 2015-04-30
+
+description: K8S Node
+
+parameters:
+  flavor:
+    type: string
+    description: flavor used by the server
+
+  image_name:
+    type: string
+    description: image used by the server
+
+  internal_network:
+    type: string
+    description: network used by the server
+
+  username:
+    type: string
+    description: username of the user
+
+  key_name:
+    type: string
+    description: name of an existing key pair to use
+    constraints:
+      - custom_constraint: nova.keypair
+        description: must name a public key (pair) known to Nova
+
+  erikube_timezone:
+    type: string
+    default: UTC
+
+  security_group_name:
+    type: string
+
+  use_config_drive:
+    default: true
+    type: boolean
+
+  servicereg_ip:
+    type: string
+
+  docker_cert:
+    type: string
+
+  docker_ip:
+    type: string
+
+resources:
+  create_user:
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        system_info:
+          default_user:
+            name: {get_param: username}
+            lock_passwd: true
+            sudo: ALL=(ALL) NOPASSWD:ALL
+            shell: /bin/bash
+
+  node_config:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config: {get_resource: cloud_config}
+      - config: {get_resource: create_user}
+      - config: {get_resource: add_keys}
+      - config: {get_resource: node_user_data}
+        type: multipart
+
+  internal_port:
+    type: OS::Neutron::Port
+    properties:
+     network: {get_param: internal_network}
+     allowed_address_pairs:
+      - ip_address: 0.0.0.0/0
+     security_groups:
+      - get_param: security_group_name
+
+  node:
+    type: OS::Nova::Server
+    properties:
+      config_drive: {get_param: use_config_drive}
+      name:
+        list_join: [-, [{get_param: "OS::stack_name"}, n]]
+      image: {get_param: image_name}
+      flavor: {get_param: flavor}
+      key_name: {get_param: key_name}
+      networks:
+        - port: {get_resource: internal_port}
+      user_data_format: RAW
+      user_data: {get_resource: node_config}
+
+  cloud_config:
+    type: OS::Heat::CloudConfig
+    properties:
+      cloud_config:
+        debug:
+          verbose: true
+        timezone:
+          str_replace:
+            params:
+              $timezone: {get_param: erikube_timezone}
+            template: |
+              $timezone
+        final_message: "The system is now up up, after $UPTIME seconds"
+
+  node_user_data:
+    type: OS::Heat::MultipartMime
+    properties:
+      parts:
+      - config:
+          str_replace:
+            params:
+              _servicereg_ip: {get_param: servicereg_ip}
+            template: |
+              #cloud-config
+              merge_how: 'list(append)+dict(recurse_array,no_replace)+str()'
+              write_files:
+                - path: /run/cloud-init/2_100_enm_config.sh
+                  owner: root:root
+                  permissions: '0777'
+                  content : |
+                    #!/bin/bash
+                    sed -i 's/search/search service.enm/g' /etc/resolv.conf
+                    sed -i '/search/anameserver _servicereg_ip' /etc/resolv.conf
+              runcmd:
+                - /run/cloud-init/2_100_enm_config.sh
+
+  add_keys:
+    type: OS::Heat::SoftwareConfig
+    properties:
+      group: script
+      config:
+        str_replace:
+          params:
+            _docker_ip: {get_param: docker_ip}
+            _docker_cert: {get_param: docker_cert}
+          template: |
+            #!/usr/bin/env bash
+            set -ex
+            if [ -z '_docker_ip' ]; then
+              echo "docker ip is empty, skipping config"
+            else
+              mkdir -p /etc/docker/certs.d/dockerregistry:5000
+              echo "_docker_cert" > /etc/docker/certs.d/dockerregistry:5000/ca.crt
+              echo -e "_docker_ip dockerregistry" >> /etc/hosts
+            fi
+            EOF
+
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: node}
+
+  internal_ip:
+    value: {get_attr: [internal_port, fixed_ips, 0, ip_address]}

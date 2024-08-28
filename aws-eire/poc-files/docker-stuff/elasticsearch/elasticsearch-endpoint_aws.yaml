@@ -1,0 +1,14 @@
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: elasticsearch
+subsets:
+  - addresses:
+      - ip: 192.168.215.75
+    ports:
+      - name: http
+        port: 80
+        protocol: TCP
+      #- name: transport
+      #  port: 9300
+      #  protocol: TCP

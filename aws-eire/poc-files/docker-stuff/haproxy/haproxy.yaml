@@ -1,0 +1,97 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: haproxy-deployment
+spec:
+  selector:
+    matchLabels:
+      app: haproxy
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: haproxy
+    spec:
+      #hostAliases:
+      #- ip: "172.20.117.70"
+      #  hostnames: 
+      #  - "sso.enmonaws.athtem.eei.ericsson.se" 
+      #  - "iorfile.enmonaws.athtem.eei.ericsson.se"
+      #- ip: "172.20.106.7"
+      #  hostnames:
+      #  - "sso-instance-1.enmonaws.athtem.eei.ericsson.se"
+      #- ip: "172.20.255.42"
+      #  hostnames:
+      #  - "httpd-instance-1" 
+      containers:
+      - name: haproxy
+        image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:haproxy-rhel6basejava8
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 22
+          - containerPort: 123
+          - containerPort: 8666
+          - containerPort: 4447
+          - containerPort: 8080
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/haproxy-config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-smrs
+            mountPath: /ericsson/tor/smrs
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-alex
+            mountPath: /ericsson/enm/alex
+      volumes:
+        - name: pv-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-smrs
+          persistentVolumeClaim:
+            claimName: smrs
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-alex
+          persistentVolumeClaim:
+            claimName: alex
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared

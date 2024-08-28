@@ -1,0 +1,5 @@
+- containerPort: 5445
+- containerPort: 8080
+- containerPort: 9999
+- containerPort: 9990
+- containerPort: 4447

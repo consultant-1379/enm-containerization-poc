@@ -1,0 +1,82 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jms
+spec:
+  selector:
+    matchLabels:
+      app: jms
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jms
+    spec:
+      containers:
+      - name: jms
+        image: dockerregistry:5000/rhel6-jms
+        ports:
+          - containerPort: 5445
+          - containerPort: 8080
+          - containerPort: 9999
+          - containerPort: 9990
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/jms_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-cron
+            mountPath: /ericsson/vmcrons
+          - name: pv-jms
+            mountPath: /ericsson/jms
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: hcdumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: no-rollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-cron
+          persistentVolumeClaim:
+            claimName: vmcrons
+        - name: pv-jms
+          persistentVolumeClaim:
+            claimName: jms

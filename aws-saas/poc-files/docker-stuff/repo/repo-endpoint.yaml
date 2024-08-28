@@ -1,0 +1,9 @@
+kind: Endpoints
+apiVersion: v1
+metadata:
+  name: repo
+subsets:
+  - addresses:
+      - ip: 10.0.0.24
+    ports:
+      - port: 80

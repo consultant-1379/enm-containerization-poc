@@ -1,0 +1,36 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+        <artifactId>jmsconfig-k8s</artifactId>
+        <groupId>com.ericsson.oss.itpf.jboss</groupId>
+        <version>1.0.1</version>
+  </parent>
+  <artifactId>hornetq-utility</artifactId>
+  <name>HornetQ Journal Check</name>
+  <description>Finding out hornetq corrupted journal</description>
+  
+<dependencies>
+<!-- https://mvnrepository.com/artifact/org.hornetq/hornetq-server -->
+<dependency>
+    <groupId>org.hornetq</groupId>
+    <artifactId>hornetq-server</artifactId>
+    <version>2.4.1.Final</version>
+</dependency>
+</dependencies>
+      <build>
+      <plugins>
+       <plugin>
+         <groupId>org.apache.maven.plugins</groupId>
+         <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+           <archive>
+             <manifest>
+              <addClasspath>true</addClasspath>
+               <classpathPrefix>lib/</classpathPrefix>
+             </manifest>
+           </archive>
+        </configuration>
+       </plugin>
+      </plugins>
+    </build>
+</project>

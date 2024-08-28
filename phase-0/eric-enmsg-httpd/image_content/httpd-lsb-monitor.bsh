@@ -1,0 +1,33 @@
+#!/bin/bash
+
+# GLOBAL VARIABLES
+_SCRIPT=/etc/init.d/httpd-enm
+NICE="/bin/nice -n -17"
+ARG="status"
+PIDOF=/sbin/pidof
+SYSTEMCTL=/bin/systemctl
+ECHO=/bin/echo
+RETVAL=0
+
+#//////////////////////////////////////////////////////////////
+# Main Part of Script
+#/////////////////////////////////////////////////////////////
+#if [ $($PIDOF systemd) ] ; then
+#    $NICE $SYSTEMCTL $ARG httpd-enm
+#    RETVAL=$?
+#elif [ $($PIDOF init) ] ; then
+#    $NICE $_SCRIPT $ARG
+#    RETVAL=$?
+#else
+#    $ECHO "Error: Failed to find any services system."
+#    RETVAL=1
+#fi
+#exit $RETVAL
+if [ -e ${_SYSTEMCTL} ] ; then
+    $NICE $_SCRIPT $ARG
+    RETVAL=$?
+else
+    $ECHO "Error: Failed to find any services system."
+    RETVAL=1
+fi
+exit $RETVAL

@@ -1,0 +1,118 @@
+parameter_defaults:
+  key_name: key_pair_CloudProject_C4B05
+
+  image_name: centos7-1708
+  master_flavor: k8s_flavor
+  minion_flavor: m1.large
+  lb_flavor: m1.medium
+  manager_flavor: k8s_flavor
+
+  external_network: provider_network
+
+  erikube_use_config_drive: true
+  erikube_timezone: UTC
+  number_of_minions: 5
+
+  os_user: CloudProject_C4B05_admin
+  os_password: admin123
+  os_url: http://cloud4b.athtem.eei.ericsson.se:5000/v2.0
+  os_project: CloudProject_C4B05
+  ansible_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCzExAcHPb8Yyw6p0zA2xjxSrNDTbpc+alguW5ACKW4XtYhJVv5efxiHyXWpxLMEJSW5bar4jqvFePfhEnG2MbDs+XnN0SpynUmj8RhUyBPijLSPW6hDYbkkoN/GFPazVIB7V/CTObnZpKyIKmpbeoweNQZfYj6YAjgOgjDlZonQDS4p4UH541lfBvgv7fdp2PFZRSp8QiAYQAKmbOR9xXn7I6RjcSrt4nlxhUcV/jtLCHedMjaimCmpNzvVTp63y0SRK8wVQKqJ2op2LRLkQSkdTjlT7c43zRI7ko+y9Q2ut9L8LVVS84jZXs3nXcIElRZ7BaaPE9+P//TY3fPdzFH Generated-by-Nova"
+
+  ansible_private_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEAsxMQHBz2/GMsOqdMwNsY8UqzQ026XPmpYLluQAiluF7WISVb
+    +Xn8Yh8l1qcSzBCUluW2q+I6rxXj34RJxtjGw7Pl5zdEqcp1Jo/EYVMgT4oy0j1u
+    oQ2G5JKDfxhT2s1SAe1fwkzm52aSsiCpqW3qMHjUGX2I+mAI4DoIw5WaJ0A0uKeF
+    B+eNZXwb4L+33adjxWUUqfEIgGEACpmzkfcV5+yOkY3Eq7eJ5cYVHFf47Swh3nTI
+    2opgpqTc71U6et8tEkSvMFUCqidqKdi0S5EEpHU45U+3ON80SO5KPsvUNrrfS/C1
+    VUvOI2V7N513CBJUWewWmjxPfj//02N3z3cxRwIDAQABAoIBAQCBqVLn2D0p4DEd
+    Qxf7KGl2BS2plPVU7t0qkPl4WgqMZfbLxz5CdIY/EeiW9SBSK8s7O5c5+7OcJNB7
+    flDhLwM0nuTftw/7lQGga0a5ZbQmg51qx1p8OMwsYr3d3+KPsk0n4hWNHZuvf4DG
+    g4n1iQWiFUsWLeRpzfF/UeYYoBEfS1J1b14iFicVf+Tm5QAhVHNoyqVlSulzHrBS
+    5J4tr/wSbJmidjIU/9WCDNtgd5psqrzxyaqXj0eGvt5N756A5k/Cjirn/aK+IyQo
+    FL0NaMd6LJ5dVo6+co6VbWWI06yV4VlPhuQP7duzzxlSE8jdai/L3XQKfv+I9BYR
+    OH2up23RAoGBAOPxSATdNuL3ksJUG//TmX8erWpUql6HeCC3rKaUDpTSbNRpdW4i
+    9GfBOcVVtH4PIJzKwcb6XAExII4cYrkZ1jHXCv7bV8TpRkTU3dLZSN6Q2NPT6K48
+    nEB45v6/Zi4oiDA2so/n/ZV0qUCqPskcucp+eGfED9dQgSYI9+MgCEr5AoGBAMkd
+    5V6twAd8f8xTO95ffoGBC5CAyfbahRqM6OQWMz7I8WPgh0Yky/0pdfbJaWDfqv96
+    HG5BmfHpcDvJakHNxL0kp2JokciNaIAEfW8zHsrv2SMxMcx0oQLBnnq02QUWZJ9m
+    o3qqfREJssE2D0SfT6QtoTRzP7OoIPzW0eTYlC4/AoGALDooqyjw+WDoDOSc+ipo
+    Yg3lv/flhqnqWQ7KZRfdLGsXyq8bpd8KZQdM2kki2EK/JS0CJEV3jJOnqWtAjIHC
+    2bDL5V9RzFcm1zwmPj8CsIySRaecQhJojunmiA9DGDmtEw3J37o3rcQRAwcFX6g/
+    NFcNrbSRDkoEhQjAcEVK1qECgYB7LgBqeOkArNRphSFKFhsZnrxCiV8p/rU/icaq
+    zJ4eely+26p+39LBAD/sI3iTiOrnBxeawDtV27COLdMS8sDpSCXtNDb2KwYyQo3B
+    KgJWMYlA8MSbgWOMmKJEbbfuUcTXjLncS8fGQ7ZkeIPpd9oDqJ7vzRbbJsLtmXV9
+    QNmhaQKBgCFy/QjsG622yEydAoI9ozAOjaHYBO3s3ybe5yK/RG8Gudzb7s5cx2VO
+    QNa8BEDrPoRzPZjWbtd18KmMm+jfiVlon1OfY0KC+bhbTYpw0Yycn7RQiZEKTmW8
+    0WnqEKPQZIvptG2x2tqGHxLkfdrG1tHmlXiJAy/it1uizIwfCoEB
+    -----END RSA PRIVATE KEY-----
+ 
+  erikube_s3_container_name: erikube
+  s3_file_name: erikube-0.2.0-1207-x86_64.tgz
+
+  manager_external_ip_address: 131.160.202.174
+  manager_external_gateway: 131.160.202.1
+  manager_external_netmask: 255.255.255.0
+
+  #rhel7_iso_image_name: rhel-7-server.iso
+  #rhel7_iso_volume_size: '25'
+  #rhel7_extras_iso_image_name: rhel-x86_64-server-extras-7.iso
+  #rhel7_extras_iso_volume_size: '4'
+
+  #
+  # LB configs
+  #
+  loadbalancer_external_netmask: 255.255.255.0
+  loadbalancer_external_gateway: 131.160.202.1
+  loadbalancer_external_ip_address: 131.160.202.175
+
+  #enm_lb_sec_group: enm_lb_security_group
+  enm_internal_network_name: enm_internal_network_CloudProject_C4B05
+  enm_loadbalancer_internal_ip_address: 10.10.0.250
+  enm_internal_subnet: 10.10.0.0/21
+  enm_internal_netmask: 255.255.248.0
+  servicereg_ip: 10.10.0.170
+  docker_ip: 131.160.200.114
+  docker_cert: |
+    -----BEGIN CERTIFICATE-----
+    MIIFiTCCA3GgAwIBAgIJAOMQhQtqwf3/MA0GCSqGSIb3DQEBCwUAMFsxCzAJBgNV
+    BAYTAmllMRUwEwYDVQQHDAxEZWZhdWx0IENpdHkxHDAaBgNVBAoME0RlZmF1bHQg
+    Q29tcGFueSBMdGQxFzAVBgNVBAMMDmRvY2tlcnJlZ2lzdHJ5MB4XDTE4MDIyNzE3
+    NDcxMloXDTE5MDIxODE3NDcxMlowWzELMAkGA1UEBhMCaWUxFTATBgNVBAcMDERl
+    ZmF1bHQgQ2l0eTEcMBoGA1UECgwTRGVmYXVsdCBDb21wYW55IEx0ZDEXMBUGA1UE
+    AwwOZG9ja2VycmVnaXN0cnkwggIiMA0GCSqGSIb3DQEBAQUAA4ICDwAwggIKAoIC
+    AQDX+FEwkaVVewvCjvImvrYYHhygPQqfL7lElTjhn8yzD9XM7X0ZBfUYTSREkgU3
+    zJBJdYrjyCfSF8rBATCNPx5bXtreE/U9auXE8F38n736PsIerh3Lc67WsPI4jTCn
+    Kwo0XKFFgj0zDIIXZiSThfHhJG6lIhLzztdNMeBcvCGcSwRrYtTkGeMaz12W2cVg
+    RUKtjE2KN6uIII0AiSrciNMed6Yf+vRrrTvIHKCzORBd36o6zFO4o5lorzb03ftk
+    xZxVTGfPPVhaXengpp+E7IWGBn4RPCZo+n6cIc2nVa/mjg51uOTTww+XufHfeWkI
+    fBrD2ZhHYRKuFKqh60iWH+qtUssJTtegWqRCtYHfR8y65EkJkEsezkF/elaVBp+3
+    /DJgNAmymjCfA7PMPMZ8eJZC5SDPL5VD9henJyBw5xzNUdviG7iKNtK1jWKgYxpd
+    eEK8/S/hhlXqDJjMyTsqekuZ8p4H0wXonn3dKgL2lZNwK3lWcCx6w6DBX7rFDo9M
+    CPETb7n9CcdcWcadOgDIoS98bllLcjgGfIvUxrhwRqv1YkriiOmWTOxqX4PTQWvi
+    9zCoPmFHsN8FZB9isRnusFOMhzqYBEYYXlp9RpugWX/huugV6QQQheYT5P+u/ofj
+    yXjjIeLUnF4IpJZIl79O/7vMKNeT29LDtPxn/XSuFsXNpwIDAQABo1AwTjAdBgNV
+    HQ4EFgQUkIpqqCOn/w/b81Zmt4AA1Vcz99IwHwYDVR0jBBgwFoAUkIpqqCOn/w/b
+    81Zmt4AA1Vcz99IwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAgEAtFtc
+    NuGnfmpspyIGtnhHX0mBYnq3Y9mFuS1wWXZ0+zdkhAcFuJgtNt0rGV6H9Onl8kao
+    4Y6fH5RiMyCCDGQ5q8PV90Oj53xTDDA1HC7eOFNm26/n2DeurD+CVtUme/Zqbban
+    Yoxa8/RVKq237JZE2wS9IgoNle624LkjAJpCcv2LAWG8kVNpDZ1iHNN/7tE8FSq5
+    hSsjUzBjCym5VbAVrCbweL9Z3Nr5n99A7k4K3O9/XmDEghKzWsTFUMp2gJCROSvV
+    ONxmXnGxDwUw19Ap7agvLbhX1BHZQjyP5dH9kC1OztRA8f+7uoWX7b/O8Eh0XIII
+    SupSWklpK8yt5wY4ASi4k4bRI5flkmdwYS8FqumhrOuyEgfxbmc4mBcOcLr/jcce
+    xO1X9btE6x56Yp3rBgYq/RgfWgOcsniK9AWn3NbymbM0tM4Lt2Bpz20LcUoxcq6w
+    2CZhfgxR+a1v5cYidAy+z8eKjmsVI2YLyvEJTfUFoaJ1fB+rxxR2cTEbJ3VgLPIb
+    Z6QoSKCX4RPMk2fVcil3bWjpZPwDBwVVfKcusgS3bCfAaQERd/499RQ9e18d81KR
+    YqFYJZf4JW6wJhuaTykeBEhTYjmo+vnaIdieem9m34vOGbMSs3PW6z/ootsh4Rvp
+    uHptsYBrxhL3m8WBZBydW9TAhEIyEsBhavi+jd4=
+    -----END CERTIFICATE-----
+
+resource_registry:
+  "K8S::Network": lib/network.yaml
+  "K8S::Manager": lib/manager_v2.yaml
+  "K8S::SecGroup": lib/sec_group.yaml
+  "K8S::ENMSecGroup": lib/enm_lb_security_group.yaml
+  "K8S::Node": lib/node_v2.yaml
+  "K8S::Loadbalancer": lib/loadbalancer.yaml
+  "K8S::ENMLoadbalancer": lib/enmloadbalancer.yaml

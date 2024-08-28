@@ -1,0 +1,3 @@
+- name: nfs-hcdumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps

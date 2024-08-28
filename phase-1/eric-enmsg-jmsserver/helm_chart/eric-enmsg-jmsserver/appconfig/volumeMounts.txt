@@ -1,0 +1,5 @@
+- name: nfs-dumps
+  mountPath: /ericsson/enm/dumps
+- name: nfs-data
+  mountPath: /ericsson/tor/data
+

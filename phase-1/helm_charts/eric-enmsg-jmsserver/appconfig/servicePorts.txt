@@ -1,0 +1,4 @@
+- port: 5445
+  name: jms
+- port: 4447
+  name: message

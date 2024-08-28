@@ -1,0 +1,38 @@
+apiVersion: apps/v1beta2
+kind: Deployment
+metadata:
+  name: gossip-router
+  labels:
+    app: gossip-router
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: gossip-router
+  template:
+    metadata:
+      labels:
+        app: gossip-router
+    spec:
+      containers:
+        - name: gossip-router
+          image: "{{ .Values.image.repository }}/{{ .Values.image.name }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - name: {{ .Values.service.remoting.name }}
+              containerPort: {{ .Values.service.remoting.port }}
+            - name: {{ .Values.service.caching.name }}
+              containerPort: {{ .Values.service.caching.port }}
+{{ toYaml .Values.resources | indent 12 }}
+    {{- with .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.affinity }}
+      affinity:
+{{ toYaml . | indent 8 }}
+    {{- end }}
+    {{- with .Values.tolerations }}
+      tolerations:
+{{ toYaml . | indent 8 }}
+    {{- end }}

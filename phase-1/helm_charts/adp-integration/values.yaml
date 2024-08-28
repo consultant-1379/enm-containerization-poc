@@ -1,0 +1,25 @@
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+
+
+images:
+  adp-integration:
+    name:
+    tag:
+    command:
+
+imageCredentials:
+  repoPath: proj_oss_releases/enm
+  pullPolicy: Always
+  registry:
+    url:
+    pullSecret:
+
+#Enable software to be included.
+eric-enm-elasticsearch:
+  enabled: true
+
+neo4j:
+  enabled: true

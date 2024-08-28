@@ -1,0 +1,4 @@
+- name: pv-smrs
+  persistentVolumeClaim:
+    claimName: smrs
+

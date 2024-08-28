@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: apache
+  labels:
+    app: apache
+spec:
+  ports:
+  - port: 80
+    name: apache
+  selector:
+    app: apache-brian

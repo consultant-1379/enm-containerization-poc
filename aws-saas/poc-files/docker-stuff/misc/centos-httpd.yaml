@@ -1,0 +1,20 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: centos-httpd
+spec:
+  containers:
+  - name: centos-httpd
+    image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:centos-httpd
+    command: ["/bin/sh", "-c"]
+    args:
+      - bash /run-httpd.sh; while true; do sleep 300;done;
+    volumeMounts:
+      - name: efs-pvc
+        mountPath: "/mnt"
+  restartPolicy: "Never"
+  volumes:
+    - name: efs-pvc
+      persistentVolumeClaim:
+        claimName: efs
+

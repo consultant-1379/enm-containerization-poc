@@ -1,0 +1,16 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  labels:
+    k8s-app: kubernetes-dashboard
+  name: dash
+  namespace: kube-system
+spec:
+  rules:
+  - host: ieatenmpd104-4.athtem.eei.ericsson.se
+    http:
+      paths:
+      - backend:
+          serviceName: kubernetes-dashboard
+          servicePort: 9091
+        path: /dash

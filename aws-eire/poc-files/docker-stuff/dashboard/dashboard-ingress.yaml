@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: enm-ui
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  rules:
+  - host: app.enmaas.io
+    http:
+      paths:
+      - path: /
+        backend:
+          serviceName: httpd
+          servicePort: 443
+  tls:
+  - hosts:
+    - app.enmaas.io

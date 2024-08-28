@@ -1,0 +1,14 @@
+apiVersion: autoscaling/v1
+kind: HorizontalPodAutoscaler
+metadata:
+  name: cmserv-simple-hpa
+  namespace: default
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1   
+    kind: Deployment
+    name: cmserv-deployment 
+  minReplicas: 1
+  maxReplicas: 4
+  targetCPUUtilizationPercentage: 50
+

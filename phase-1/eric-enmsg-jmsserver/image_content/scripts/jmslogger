@@ -1,0 +1,50 @@
+#########################################
+# This file is responsible to hold all  #
+# the methods required for logging      #
+# in var/log/messages.                  #
+#########################################
+
+#######################################
+# Action :
+#   Log at INFO level
+# Globals:
+#   None
+# Arguments:
+#   Message string
+# Returns:
+#  
+#######################################
+info() {
+
+    logger -s -t JMS -p user.info "INFO ($prg): $@"
+}
+
+#######################################
+# Action :
+#   Log at WARN level
+# Globals:
+#   None
+# Arguments:
+#   Message string
+# Returns:
+#
+#######################################
+warn() {
+
+    logger -s -t JMS -p user.warn "WARN ($prg): $@"
+}
+
+#######################################
+# Action : 
+#   Log at ERROR level
+# Globals:
+#   None
+# Arguments:
+#   Message string
+# Returns:
+#
+#######################################
+error() {
+
+    logger -s -t JMS  -p user.err "ERROR ($prg): $@"
+}

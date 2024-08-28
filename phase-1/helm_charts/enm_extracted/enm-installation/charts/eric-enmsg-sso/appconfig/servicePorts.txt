@@ -1,0 +1,9 @@
+- name: jboss
+  port: 8080
+  targetPort: 8080
+- name: jboss-secure
+  port: 8443
+  targetPort: 8443
+- name: ejb
+  port: 4447
+  targetPort: 4447

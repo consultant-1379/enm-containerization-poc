@@ -1,0 +1,9 @@
+dependencies:
+- name: eric-enm-elasticsearch
+  repository: http://127.0.0.1:8879/charts
+  version: 0.1.0
+- name: neo4j
+  repository: http://127.0.0.1:8879/charts
+  version: 0.7.2
+digest: sha256:522edfd3b9c7515f7241e46a2a9ce944f355e0d613eae57eaf1f6aa8548503dd
+generated: 2019-04-12T13:51:02.8909471+01:00

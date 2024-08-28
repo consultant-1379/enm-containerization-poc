@@ -1,0 +1,12 @@
+- name: pv-gp
+  configMap:
+    name: gpcloud
+- name: pv-data
+  persistentVolumeClaim:
+    claimName: nfs-data
+- name: pv-mdt
+  persistentVolumeClaim:
+    claimName: nfs-mdt
+- name: pv-dumps
+  persistentVolumeClaim:
+    claimName: nfs-hcdumps

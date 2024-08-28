@@ -1,0 +1,28 @@
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+
+
+images:
+  enm-integration:
+    name: eric-enmsg-modelserv
+    tag: test
+    command: "[ '/bin/sh', '-c', 'bash /var/tmp/invoke_mdt_post_install.sh;' ]"
+
+imageCredentials:
+  repoPath: proj_oss_releases/enm
+  pullPolicy: Always
+  registry:
+    url:
+    pullSecret:
+
+#Enable software to be included.
+adp-integration:
+  enabled: true
+
+infra-integration:
+  enabled: true
+
+stateless-integration:
+  enabled: true

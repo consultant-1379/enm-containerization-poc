@@ -1,0 +1,122 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: models
+  labels:
+    name: models
+spec:
+  clusterIP: None
+  ports:
+    - name: port1
+      port: 34371
+      targetPort: 34371
+    - name: port2
+      port: 36869
+      targetPort: 36869
+  selector:
+    app: models
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: models
+spec:
+  selector:
+    matchLabels:
+      app: models
+  serviceName: models
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: models
+    spec:
+      initContainers:
+      - name: models-wait
+        resources:
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-init-container
+        imagePullPolicy: Always
+        command: ["/bin/sh", "-c"]
+        args:
+          - 'bash /var/tmp/check_service.sh -s jms01 -n default'
+      containers:
+      - name: models
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-modelserv
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        resources:
+          limits:
+            memory: "10Gi"
+        ports:
+          - containerPort: 34371
+          - containerPort: 36869
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/models_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: nfs-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-configmgtupgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+#          - name: models-jar
+#            mountPath: /var/opt/ericsson/ERICmodeldeployment
+#          - name: models-tmp
+#            mountPath: /ericsson/tmp
+#          - name: models
+#            mountPath: /ericsson/models
+      volumes:
+        - name: nfs-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+        - name: pv-configmgtupgind
+          persistentVolumeClaim:
+            claimName: nfs-upgind
+#  volumeClaimTemplates:
+#    - metadata:
+#        name: models-jar
+#      spec:
+#        storageClassName: "gp2"
+#        accessModes:
+#          - ReadWriteOnce
+#        resources:
+#          requests:
+#            storage: 2Gi
+#    - metadata:
+#        name: models
+#      spec:
+#        storageClassName: "gp2"
+#        accessModes:
+#          - ReadWriteOnce
+#        resources:
+#          requests:
+#            storage: 1Gi
+#    - metadata:
+#        name: models-tmp
+#      spec:
+#        storageClassName: "gp2"
+#        accessModes:
+#          - ReadWriteOnce
+#        resources:
+#          requests:
+#            storage: 12Gi

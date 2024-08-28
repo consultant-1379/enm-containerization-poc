@@ -1,0 +1,11 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: mscm-ingress-l4
+  annotations:
+    protocol: TCP
+    layer: L4
+spec:
+  backend:
+    serviceName: mscm-corba-service
+    servicePort: 58151

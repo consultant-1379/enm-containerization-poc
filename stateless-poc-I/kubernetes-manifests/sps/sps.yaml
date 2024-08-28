@@ -1,0 +1,76 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sps-deployment
+spec:
+  selector:
+    matchLabels:
+      app: sps
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sps
+    spec:
+      containers:
+      - name: sps
+        resources:
+          requests:
+            memory: "6Gi"
+        image: dockerregistry:5000/rhel6-sso
+        ports:
+          - containerPort: 8080
+          - containerPort: 4447
+          - containerPort: 9990
+          - containerPort: 56400
+          - containerPort: 56401
+          - containerPort: 56402
+          - containerPort: 56406
+          - containerPort: 56408
+          - containerPort: 56412
+          - containerPort: 56413
+          - containerPort: 56414
+          - containerPort: 56418
+          - containerPort: 56419
+          - containerPort: 56420
+          - containerPort: 56407
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]
+        volumeMounts:
+          - name: data
+            mountPath: /ericsson/tor/data
+          - name: mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: home
+            mountPath: /home/shared
+          - name: custom
+            mountPath: /ericsson/custom
+          - name: dumps
+            mountPath: /ericsson/enm/dumps
+          - name: dlms
+            mountPath: /ericsson/enm/dlms/history/data
+      volumes:
+        - name: data
+          nfs:
+            server: nfsdata
+            path: "/ericsson/data"
+        - name: dumps
+          nfs:
+            server: nfshcdumps
+            path: "/ericsson/hcdumps"
+        - name: mdt
+          nfs:
+            server: nfsmdt
+            path: "/ericsson/mdt"
+        - name: home
+          nfs:
+            server: nfshome
+            path: "/ericsson/home"
+        - name: custom
+          nfs:
+            server: nfscustom
+            path: "/ericsson/custom"
+        - name: dlms
+          nfs:
+            server: nfsdlms
+            path: "/ericsson/dlms"

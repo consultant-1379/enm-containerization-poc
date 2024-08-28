@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gossiprouter
+spec:
+  ports:
+    - name: remoting
+      port: 12001
+      targetPort: 12001
+    - name: caches
+      port: 12002
+      targetPort: 12002
+  selector:
+    app: gossiprouter
+

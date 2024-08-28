@@ -1,0 +1,9 @@
+dependencies:
+  - name: eric-enm-elasticsearch
+    repository: "@local"
+    version: 0.1.0
+    condition: eric-enm-elasticsearch.enabled
+  - name: neo4j
+    repository: "@local"
+    version: 0.7.2
+    condition: neo4j.enabled

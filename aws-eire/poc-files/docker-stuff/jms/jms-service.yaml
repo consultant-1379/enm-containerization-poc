@@ -1,0 +1,31 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jms
+  labels:
+    app: jms
+spec:
+  clusterIP: None
+  ports:
+  - port: 5445
+    name: jms
+  - port: 4447
+    name: message
+  selector:
+    app: jms
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jms01
+  labels:
+    app: jms01
+spec:
+  ports:
+  - port: 5445
+    name: jms
+  - port: 4447
+    name: message
+  selector:
+    app: jms

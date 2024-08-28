@@ -1,0 +1,19 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: pm-ui-ingress
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+spec:
+  rules:
+  - host: app.enmaas.io
+    http:
+      paths:
+      - path: /pmserv
+        backend:
+          serviceName: pmserv-micro
+          servicePort: 443
+  tls:
+  - hosts:
+    - app.enmaas.io

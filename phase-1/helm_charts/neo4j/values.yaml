@@ -1,0 +1,161 @@
+# Default values for Neo4j.
+# This is a YAML-formatted file.
+# Declare name/value pairs to be passed into your templates.
+# name: value
+
+name: "neo4j"
+
+# Specs for the Neo4j docker image
+image: "neo4j"
+imageTag: "3.5.3-enterprise"
+imagePullPolicy: "IfNotPresent"
+# imagePullSecret: registry-secret
+acceptLicenseAgreement: "yes"
+podDisruptionBudget: {}
+  # minAvailable: 2
+  # maxUnavailable: 1
+
+# Use password authentication
+authEnabled: true
+
+## Specify password for neo4j user
+## Defaults to a random 10-character alphanumeric string if not set and authEnabled is true
+neo4jPassword: Neo4jadmin123
+
+# Specs for the images used for running tests against the Helm package
+testImage: "markhneedham/k8s-kubectl"
+testImageTag: "master"
+
+# Cores
+core:
+  numberOfServers: 3
+  persistentVolume:
+
+    ## core server data Persistent Volume mount root path
+    ##
+    mountPath: /data
+
+    ## core server data Persistent Volume size
+    ##
+    size: 5Gi
+
+    ## core server data Persistent Volume Storage Class
+    ## If defined, storageClassName: <storageClass>
+    ## If set to "-", storageClassName: "", which disables dynamic provisioning
+    ## If undefined (the default) or set to null, no storageClassName spec is
+    ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+    ##   GKE, AWS & OpenStack)
+    storageClass: "erikube-cinder"
+
+    ## Subdirectory of core server data Persistent Volume to mount
+    ## Useful if the volume's root directory is not empty
+    ##
+    ## subPath: ""
+
+  ## Pass extra environment variables to the Neo4j container.
+  ##
+  extraVars:
+   - name: NEO4J_dbms_security_procedures_unrestricted
+     value: "ericsson.driver.*"
+   - name: NEO4J_dbms_unmanaged__extension__classes
+     value: "com.ericsson.oss.itpf.datalayer.dps.neo4j.driver.transport.bolt.extension=/boltex"
+   - name: NEO4J_dbms_track__query__allocation
+     value: "false"
+   - name: NEO4J_dbms_udc_enabled
+     value: "false"
+   - name: NEO4J_dbms_shell_enabled
+     value: "true"
+   - name: NEO4J_dbms_shell_host
+     value: "127.0.0.1"
+   - name: NEO4J_dbms_shell_port
+     value: "1337"
+   - name: NEO4J_dbms_transaction_timeout
+     value: "10m"
+   - name: NEO4J_dbms_security_auth__enabled
+     value: "true"
+   - name: NEO4J_dbms_security_causal__clustering__status__auth__enabled
+     value: "true"
+   - name: NEO4J_unsupported_dbms_record__id__batch__size
+     value: "20"
+   - name: NEO4J_dbms_connector_bolt_thread__pool__keep__alive
+     value: "5m"
+   - name: NEO4J_dbms_jvm_additional
+     value: "-Dcom.sun.management.jmxremote -Dorg.neo4j.causalclustering.core.EnterpriseCoreEditionModule.idReuse=true -Dunsupported.dbms.udc.source=rpm -Djdk.tls.ephemeralDHKeySize=2048 -XX:+UseG1GC -XX:-OmitStackTraceInFastThrow -XX:+AlwaysPreTouch -XX:+DisableExplicitGC"
+   - name: NEO4J_causal__clustering_enable__pre__voting
+     value: "true"
+   - name: NEO4J_causal__causal__clustering_property__key__token__id__allocation__size
+     value: "1024"
+   - name: NEO4J_causal__clustering_string__block__id__allocation__size
+     value: "131072"
+   - name: NEO4J_causal__clustering_relationship__id__allocation__size
+     value: "131072"
+   - name: NEO4J_causal__clustering_cluster__routing__ttl
+     value: "60s"
+ 
+  # - name: EXTRA_VAR_2
+  #   value: extra-var-value-2
+
+  sidecarContainers: []
+  ## Additional containers to be added to the Neo4j core pod.
+  #  - name: my-sidecar
+  #    image: nginx:latest
+
+  initContainers:
+  # init containers to run before the Neo4j core pod e.g. to install plugins
+
+   - name: init-plugins
+     image: "armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enm-neo4j-server-extension"
+     imagePullPolicy: "Always"
+     volumeMounts:
+     - name: plugins
+       mountPath: /plugins
+     command: ["/bin/sh", "-c"]
+     args:
+       - cp /ericsson/3pp/neo4j/plugins/* /plugins/
+       #- wget http://10.0.0.24/enm/neo4j-java-driver-transport-bolt-extension-1.20.3-shaded.jar;cp neo4j-java-driver-transport-bolt-extension-1.14.6-shaded.jar /plugins/
+     #command:
+     #  - "/bin/sh"
+     #  - "-c"
+     #  - |
+     #    wget http://10.0.0.24/enm/neo4j-java-driver-transport-bolt-extension-1.20.3-shaded.jar
+     #    cp neo4j-java-driver-transport-bolt-extension-1.14.6-shaded.jar /plugins/
+
+# Read Replicas
+readReplica:
+  numberOfServers: 0
+  ## Pass extra environment variables to the Neo4j container.
+  ##
+  # extraVars:
+  # - name: EXTRA_VAR_1
+  #   value: extra-var-value-1
+  # - name: EXTRA_VAR_2
+  #   value: extra-var-value-2
+
+  sidecarContainers: []
+  ## Additional containers to be added to the Neo4j replica pod.
+  #  - name: my-sidecar
+  #    image: nginx:latest
+
+  initContainers: []
+  ## init containers to run before the Neo4j replica pod e.g. to install plugins
+
+  # - name: init-plugins
+  #   image: "appropriate/curl:latest"
+  #   imagePullPolicy: "IfNotPresent"
+  #   volumeMounts:
+  #   - name: plugins
+  #     mountPath: /plugins
+  #   command:
+  #     - "/bin/sh"
+  #     - "-c"
+  #     - |
+  #       curl -L 131.160.200.113/neo4j-java-driver-transport-bolt-extension-1.20.3-shaded.jar  -O
+  #       cp neo4j-java-driver-transport-bolt-extension-1.20.3-shaded.jar /plugins/
+
+resources: {}
+# limits:
+#   cpu: 100m
+#   memory: 512Mi
+# requests:
+#   cpu: 100m
+#   memory: 512Mi

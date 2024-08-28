@@ -1,0 +1,3 @@
+version: "2"
+domain: lvsrouter.ericsson.com
+repo: com.ericsson.oss.microservices/lvsrouter

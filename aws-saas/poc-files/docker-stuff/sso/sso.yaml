@@ -1,0 +1,92 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: sso-deployment
+spec:
+  selector:
+    matchLabels:
+      app: sso
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: sso
+    spec:
+      containers:
+      - name: sso
+        resources:
+          requests:
+            memory: "3Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:sso-rhel6jboss
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 9999
+          - containerPort: 4447
+          - containerPort: 7999
+          - containerPort: 4320
+          - containerPort: 8443
+          - containerPort: 4445
+          - containerPort: 12987
+          - containerPort: 1699
+          - containerPort: 8082
+          - containerPort: 49342
+          - containerPort: 2600
+          - containerPort: 1699
+          - containerPort: 40424
+          - containerPort: 8009
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-custom
+            mountPath: /ericsson/custom
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-shared
+            mountPath: /ericsson/home
+          - name: pv-upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-upgind
+          persistentVolumeClaim:
+            claimName: upgind

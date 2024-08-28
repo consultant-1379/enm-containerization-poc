@@ -1,0 +1,9 @@
+- name: secure
+  port: 8445
+  targetPort: 8445
+- name: someport
+  port: 8446
+  targetPort: 8443
+- name: unsecure
+  port: 8085
+  targetPort: 8085

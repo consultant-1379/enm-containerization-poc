@@ -1,0 +1,155 @@
+heat_template_version: 2015-04-30
+description: >
+    EriKube cluster with one loadbalancer, one master and one or more worker nodes
+    (as specified by the number_of_minions parameter, which defaults to 3).
+
+parameters:
+  master_flavor:
+    type: string
+    description: flavor for k8s master node
+
+  minion_flavor:
+    type: string
+    description: flavor for k8s worker node
+
+  lb_flavor:
+    type: string
+    description: flavor for LB node
+
+  manager_flavor:
+    type: string
+    description: flavor for manager server
+
+  image_name:
+    type: string
+    description: image used by the server
+
+  username:
+    type: string
+    default: jedi
+    description: username of the user
+
+  key_name:
+    type: string
+    description: name of an existing key pair to use for the server
+    constraints:
+      - custom_constraint: nova.keypair
+        description: must name a public key (pair) known to Nova
+
+  erikube_timezone:
+    type: string
+    default: UTC
+
+  use_config_drive:
+    default: true
+    type: boolean
+
+  number_of_minions:
+    type: number
+    description: how many kubernetes minions to spawn initially
+    default: 5
+
+  erikube_network_cidr:
+    type: string
+    description: network range for cluster IP network
+    default: 10.10.10.0/24
+
+  external_network:
+    type: string
+    description: name of a network to use for floating IP address
+
+  manager_external_interface:
+    type: string
+    default: eth1
+
+  loadbalancer_external_interface:
+    type: string
+    default: eth1
+  loadbalancer_external_netmask:
+    type: string
+  loadbalancer_external_gateway:
+    type: string
+  loadbalancer_external_ip_address:
+    type: string
+
+resources:
+  network:
+    type: K8S::Network
+    properties:
+      cidr: {get_param: erikube_network_cidr}
+
+  sec_group:
+    type: K8S::SecGroup
+    # depends_on: [network]
+
+  master:
+    type: K8S::Node
+    properties:
+      flavor: {get_param: master_flavor}
+      image_name: {get_param: image_name}
+      key_name: {get_param: key_name}
+      username: {get_param: username}
+      internal_network: {get_resource: network}
+      erikube_timezone: {get_param: erikube_timezone}
+      security_group_name: {get_resource: sec_group}
+      use_config_drive: {get_param: use_config_drive}
+
+  minions:
+    type: OS::Heat::ResourceGroup
+    properties:
+      count: {get_param: number_of_minions}
+      resource_def:
+        type: K8S::Node
+        properties:
+          image_name: {get_param: image_name}
+          flavor: {get_param: minion_flavor}
+          key_name: {get_param: key_name}
+          username: {get_param: username}
+          internal_network: {get_resource: network}
+          erikube_timezone: {get_param: erikube_timezone}
+          security_group_name: {get_resource: sec_group}
+          use_config_drive: {get_param: use_config_drive}
+
+  loadbalancer:
+    type: K8S::Loadbalancer
+    properties:
+      flavor: {get_param: lb_flavor}
+      image_name: {get_param: image_name}
+      key_name: {get_param: key_name}
+      username: {get_param: username}
+      internal_network: {get_resource: network}
+      erikube_timezone: {get_param: erikube_timezone}
+      security_group_name: {get_resource: sec_group}
+      use_config_drive: {get_param: use_config_drive}
+      external_network: {get_param: external_network}
+      loadbalancer_external_netmask: {get_param: loadbalancer_external_netmask}
+      loadbalancer_external_gateway: {get_param: loadbalancer_external_gateway}
+      loadbalancer_external_ip_address: {get_param: loadbalancer_external_ip_address}
+
+  manager:
+    type: K8S::Manager
+    properties:
+      flavor: {get_param: manager_flavor}
+      image_name: {get_param: image_name}
+      key_name: {get_param: key_name}
+      username: {get_param: username}
+      internal_network: {get_resource: network}
+      erikube_timezone: {get_param: erikube_timezone}
+      security_group_name: {get_resource: sec_group}
+      use_config_drive: {get_param: use_config_drive}
+      external_network: {get_param: external_network}
+      master_ip: {get_attr: [master, internal_ip]}
+      minions_ip: {get_attr: [minions, internal_ip]}
+      lb_ip: {get_attr: [loadbalancer, internal_ip]}
+      lb_external_ip: {get_attr: [loadbalancer, external_ip]}
+
+outputs:
+  k8s_dashboard:
+    value:
+      str_replace:
+        template: https://host/
+        params:
+          host: {get_attr: [loadbalancer, external_ip]}
+
+  mgmt_ip:
+    value: {get_attr: [manager, external_ip]}

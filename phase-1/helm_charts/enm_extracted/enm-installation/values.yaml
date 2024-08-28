@@ -1,0 +1,122 @@
+global:
+  registry:
+    url: 152254703525.dkr.ecr.eu-west-1.amazonaws.com
+    pullSecret:
+
+
+images:
+  enm-installation:
+    name: eric-enmsg-modelserv
+    tag: test
+    command: "[ '/bin/sh', '-c', 'bash /var/tmp/invoke_mdt_post_install.sh;' ]"
+
+imageCredentials:
+  repoPath: enm
+  pullPolicy: Always
+  registry:
+    url:
+    pullSecret:
+
+#Enable software to be included.
+eric-enm-globalproperties:
+  enabled: true
+
+eric-enm-nfspvc: 
+  enabled: true
+
+eric-enm-serviceroles: 
+  enabled: true
+
+eric-enmsg-access-control: 
+  enabled: true
+
+eric-enmsg-cmservice: 
+  enabled: true
+
+eric-enmsg-eventbasedclient: 
+  enabled: true
+
+eric-enmsg-fls: 
+  enabled: true
+
+eric-enmsg-fm-alarm-processing: 
+  enabled: true
+
+eric-enmsg-fm-service: 
+  enabled: true
+
+eric-enmsg-gossiprouter-cache: 
+  enabled: true
+
+eric-enmsg-gossiprouter-remoting: 
+  enabled: true
+
+eric-enmsg-ha-proxy: 
+  enabled: true
+
+eric-enmsg-httpd: 
+  enabled: true
+
+eric-enmsg-jmsserver: 
+  enabled: true
+
+eric-enmsg-lcmservice: 
+  enabled: true
+
+eric-enmsg-medrouter: 
+  enabled: true
+
+eric-enmsg-modelserv: 
+  enabled: true
+
+eric-enmsg-mscm: 
+  enabled: true
+
+eric-enmsg-msfm: 
+  enabled: true
+
+eric-enmsg-mspm: 
+  enabled: true
+
+eric-enmsg-networkexplorer: 
+  enabled: true
+
+eric-enmsg-opendj: 
+  enabled: true
+
+eric-enmsg-openidm: 
+  enabled: true
+
+eric-enmsg-pki-ra-service: 
+  enabled: true
+
+eric-enmsg-pmic-router-policy: 
+  enabled: true
+
+eric-enmsg-pmservice: 
+  enabled: true
+
+eric-enmsg-postgres: 
+  enabled: true
+
+eric-enmsg-security-service: 
+  enabled: true
+
+eric-enmsg-sentinel: 
+  enabled: true
+
+eric-enmsg-serviceregistry: 
+  enabled: true
+
+eric-enmsg-sps-service: 
+  enabled: true
+
+eric-enmsg-sso: 
+  enabled: true
+
+eric-enmsg-uiservice: 
+  enabled: true
+
+eric-enmsg-web-push-service: 
+  enabled: true
+

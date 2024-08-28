@@ -1,0 +1,165 @@
+apiVersion: "apps/v1beta2"
+kind: StatefulSet
+metadata:
+  name: {{ .Values.service.name }}
+spec:
+  serviceName: {{ .Values.service.name }}
+  replicas: {{ template "eric-enmsg-sentinel.replicas" . }}
+  selector:
+    matchLabels:
+      app: {{ .Values.service.name }}
+  strategy:
+    type: {{ .Values.updateStrategy.type }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.service.name }}
+{{- with .Values.podAnnotations }}
+      annotations:
+{{ toYaml . | indent 8 }}
+{{- end }}
+    spec:
+{{- if .Values.priorityClassName }}
+      priorityClassName: "{{ .Values.priorityClassName }}"
+{{- end }}
+{{- if .Values.affinity }}
+      affinity:
+{{ tpl .Values.affinity . | indent 8 }}
+{{- end }}
+{{- if .Values.nodeSelector }}
+      nodeSelector:
+{{ toYaml .Values.nodeSelector | indent 8 }}
+{{- end }}
+{{- if .Values.tolerations }}
+      tolerations:
+{{ toYaml .Values.tolerations | indent 8 }}
+{{- end }}
+{{- if or .Values.extraInitContainers .Values.images.waitInitContainer.enabled .Values.images.enmInitContainer.enabled }}
+      initContainers:
+{{- if .Values.images.waitInitContainer.enabled }}
+      - name: {{ .Values.service.name }}-wait
+        image: {{ template "eric-enmsg-sentinel.registryUrl" . }}/{{ .Values.imageCredentials.repoPath }}/{{ index .Values "images" "waitInitContainer" "name" }}:{{ index .Values "images" "waitInitContainer" "tag" }}
+        imagePullPolicy: {{ .Values.imageCredentials.pullPolicy }}
+        command: {{ index .Values "images" "waitInitContainer" "command" }}
+        env:
+          - name: NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+{{- if and .Values.waitInitContainerEnv.enabled .Values.images.waitInitContainer.enabled  }}
+{{ toYaml .Values.waitInitContainerEnv.env | indent 10 }}
+{{- end }}
+{{- end }}
+{{- if .Values.images.enmInitContainer.enabled }}
+      - name: {{ .Values.service.name }}-enm
+        image: {{ template "eric-enmsg-sentinel.registryUrl" . }}/{{ .Values.imageCredentials.repoPath }}/{{ index .Values "images" "enmInitContainer" "name" }}:{{ index .Values "images" "enmInitContainer" "tag" }}
+        imagePullPolicy: {{ .Values.imageCredentials.pullPolicy }}
+        command: {{ index .Values "images" "enmInitContainer" "command" }}
+{{- if and .Values.enmInitContainerEnv.enabled .Values.images.enmInitContainer.enabled  }}
+        env:
+{{ toYaml .Values.enmInitContainerEnv.env | indent 10 }}
+{{- end }}
+{{- end }}
+{{- if .Values.extraInitContainers }}
+{{ toYaml .Values.extraInitContainers | indent 6 }}
+{{- end }}
+{{- end }}
+      containers:
+      - name: {{ .Values.service.name }}
+        image: {{ template "eric-enmsg-sentinel.registryUrl" . }}/{{ .Values.imageCredentials.repoPath }}/{{ index .Values "images" "eric-enmsg-sentinel" "name" }}:{{ index .Values "images" "eric-enmsg-sentinel" "tag" }}
+        imagePullPolicy: {{ .Values.imageCredentials.pullPolicy }}
+{{- if index .Values "images" "eric-enmsg-sentinel" "command" }}
+        command: {{ index .Values "images" "eric-enmsg-sentinel" "command" }}
+{{- end }}
+{{- if  .Values.privileged.enabled }}
+        securityContext:
+          privileged: true
+{{- end }}
+{{- if or .Values.resources.requests.enabled .Values.resources.limits.enabled }}
+        resources:
+{{- if  .Values.resources.requests.enabled }}
+          requests:
+{{- if  .Values.resources.requests.memory }}
+            memory: {{ .Values.resources.requests.memory | quote }}
+{{- end }}
+{{- if  .Values.resources.requests.cpu }}
+            cpu: {{ .Values.resources.requests.cpu | quote }}
+{{- end }}{{- end }}
+{{- if  .Values.resources.limits.enabled }}
+          limits:
+{{- if  .Values.resources.requests.memory }}
+            memory: {{ .Values.resources.requests.memory | quote }}
+{{- end }}
+{{- if  .Values.resources.requests.cpu }}
+            cpu: {{ .Values.resources.requests.cpu | quote }}
+{{- end }}
+{{- end }}
+{{- end }}
+{{- if .Values.extraEnv }}
+        env:
+{{ toYaml .Values.extraEnv | indent 10 }}
+{{- end }}
+{{- if .Values.extraPorts.enabled }}
+        ports:
+{{ .Files.Get "appconfig/containerPorts.txt" | indent 10 }}
+{{- end }}
+{{- if .Values.livenessProbe.enabled }}
+        livenessProbe:
+          httpGet:
+            port: {{ .Values.readinessProbe.httpPort }}
+          initialDelaySeconds: {{ .Values.livenessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.livenessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.livenessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.livenessProbe.failureThreshold }}
+{{- end }}
+{{- if .Values.readinessProbe.enabled }}
+        readinessProbe:
+          httpGet:
+            port: {{ .Values.readinessProbe.httpPort }}
+          initialDelaySeconds: {{ .Values.readinessProbe.initialDelaySeconds }}
+          periodSeconds: {{ .Values.readinessProbe.periodSeconds }}
+          timeoutSeconds: {{ .Values.readinessProbe.timeoutSeconds }}
+          failureThreshold: {{ .Values.readinessProbe.failureThreshold }}
+{{- end }}
+{{- if or .Values.persistentVolumeClaim.enabled .Values.configMaps.enabled .Values.extraVolumeMounts.enabled }}
+        volumeMounts:
+{{- end }}
+{{- if .Values.persistentVolumeClaim.enabled }}
+        - name: pv-{{ template "eric-enmsg-sentinel.name" . }}
+          mountPath: {{ .Values.persistentVolumeClaim.mountPath }}
+{{- end }}
+{{- if .Values.configMaps.enabled }}
+        - name: configurations
+          mountPath: {{ .Values.configMaps.mountPath }}
+{{- end }}
+{{- if .Values.extraVolumeMounts.enabled }}
+{{ .Files.Get "appconfig/volumeMounts.txt" | indent 8 }}
+{{- end }}
+{{- if .Values.sidecarContainers }}
+{{ toYaml .Values.sidecarContainers | indent 6 }}
+{{- end }}
+      volumes:
+{{- if .Values.configMaps.enabled }}
+      - name: configurations
+        configMap:
+          name: {{ .Values.configMaps.name }}
+{{- end }}
+{{- if .Values.extraVolumes.enabled }}
+{{ .Files.Get "appconfig/volumes.txt" | indent 6 }}
+{{- end }}
+{{- if include "eric-enmsg-sentinel.pullSecrets" . }}
+      imagePullSecrets:
+        - name: {{ template "eric-enmsg-sentinel.pullSecrets" . }}
+{{- end }}
+{{- if .Values.persistentVolumeClaim.enabled }}
+  volumeClaimTemplates:
+    - metadata:
+        name: pv-{{ template "eric-enmsg-sentinel.name" . }}
+      spec:
+        accessModes:
+          - {{ .Values.persistentVolumeClaim.accessMode | quote }}
+        storageClassName: {{ template "eric-enmsg-sentinel.storageClass" . }}
+        resources:
+          requests:
+            storage: "{{ .Values.persistentVolumeClaim.size }}"
+{{- end }}

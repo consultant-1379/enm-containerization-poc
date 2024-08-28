@@ -1,0 +1,7 @@
+DEP=true
+NAME=eric-enmsg-cmservice
+SVC=cmserv
+WAIT=true
+WAIT_LIST=gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps
+REQUESTS=true
+REQUESTS_LIST=6Gi,2000m

@@ -1,0 +1,54 @@
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  name: manager-role
+rules:
+- apiGroups:
+  - routing.lvsingress.ericsson.com
+  resources:
+  - lvsingresses
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - routing.lvsingress.ericsson.com
+  resources:
+  - lvsingresses/status
+  verbs:
+  - get
+  - update
+  - patch
+- apiGroups:
+  - ""
+  resources:
+  - Endpoints
+  verbs:
+  - get
+  - update
+  - patch
+  - create
+- apiGroups:
+  - ""
+  resources:
+  - Services
+  verbs:
+  - get
+  - update
+  - patch
+  - delete
+- apiGroups:
+  - ""
+  resources:
+  - Nodes
+  verbs:
+  - get
+  - list
+

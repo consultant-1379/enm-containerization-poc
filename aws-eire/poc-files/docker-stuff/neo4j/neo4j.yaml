@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neo4j
+spec:
+  selector:
+    matchLabels:
+      app: neo4j
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: neo4j
+    spec:
+      containers:
+      - name: neo4j
+        image: dockerregistry:5000/rhel6-neo4j
+        ports:
+          - containerPort: 7687
+          - containerPort: 7473
+          - containerPort: 7474
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/neo4j_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-ddc-data
+            mountPath: /var/ericsson/ddc_data
+          - name: pv-neo4j
+            mountPath: /ericsson/neo4j
+      volumes:
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: hcdumps
+        - name: pv-ddc-data
+          persistentVolumeClaim:
+            claimName: ddc-data
+        - name: pv-neo4j
+          persistentVolumeClaim:
+            claimName: neo4j

@@ -1,0 +1,5 @@
+[cifwk_enm]
+name=Cifwk ENM Repository
+baseurl=https://d13h60r5ikn7wu.cloudfront.net/ENM
+enabled=1
+gpgcheck=0

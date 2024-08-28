@@ -1,0 +1,7 @@
+STS=true
+NAME=eric-enmsg-sentinel
+PERSIST=true
+PERSIST_LIST=ReadWriteOnce,1Gi,/ericsson/sentinel_lic
+SVC=sentinel
+EXTRASVC=true
+ESVC_LIST=sentinelhost

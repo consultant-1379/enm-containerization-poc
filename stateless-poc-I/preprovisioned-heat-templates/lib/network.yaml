@@ -1,0 +1,45 @@
+heat_template_version: 2015-04-30
+description: Erikube cluster network
+parameters:
+  network_name:
+    type: string
+    default: erikube_cluster_network
+  cidr:
+    type: string
+    description: network range for cluster IP network
+    default: 10.100.1.0/24
+  default_gw:
+    type: string
+    description: Default gw. Make sure this is manager's address
+    default: 10.10.10.10
+  nameserver1:
+    type: string
+    description: External DNS #1
+    default: 159.107.173.3
+  nameserver2:
+    type: string
+    description: External DNS #2
+    default: 159.107.173.12
+
+resources:
+  cluster_network:
+    properties:
+      name: {get_param: network_name}
+    type: OS::Neutron::Net
+
+  cluster_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      cidr: {get_param: cidr}
+      gateway_ip: {get_param: default_gw}
+      network_id: {get_resource: cluster_network}
+      dns_nameservers:
+        - {get_param: nameserver1}
+        - {get_param: nameserver2}
+
+outputs:
+  OS::stack_id:
+    value: {get_resource: cluster_network}
+
+  subnet_id:
+    value: {get_resource: cluster_subnet}

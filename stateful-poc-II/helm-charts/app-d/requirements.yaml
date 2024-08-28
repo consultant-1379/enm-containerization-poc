@@ -1,0 +1,7 @@
+dependencies:
+- name: app-a
+  version: "0.1.0"
+  repository: file://../app-a
+- name: app-c
+  version: "0.1.0"
+  repository: file://../app-c

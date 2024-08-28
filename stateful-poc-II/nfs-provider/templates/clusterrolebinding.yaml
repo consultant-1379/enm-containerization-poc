@@ -1,0 +1,17 @@
+# Copyright 2017 The Erikube-Helm Authors.
+# TODO: In 1.8 we need to change to rbac.authorization.k8s.io/v1
+{{- if .Values.rbac.enabled }}
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: {{ .Values.serviceaccount.name }}
+subjects:
+  - kind: ServiceAccount
+    name:  {{ .Values.serviceaccount.name }}
+    namespace: default
+roleRef:
+  kind: ClusterRole
+  name: {{ .Values.rbac.role_ref_name }}
+  apiGroup: rbac.authorization.k8s.io
+{{ end }}

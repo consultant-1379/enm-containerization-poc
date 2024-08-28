@@ -1,0 +1,129 @@
+## <CHARTNAME> image version
+image:
+  repository: 
+  tag: <CHARTNAME>
+  imagePullPolicy: Always
+  command: "[ '/bin/sh', '-c', 'bash /var/tmp/<CHARTNAME>_config.sh; while true; do sleep 300;done;' ]"
+
+deploymentStrategy: RollingUpdate
+
+# Number of replicas(pods) to deploy
+replicas-<CHARTNAME>: 1
+
+# Add in volumes(nfs etc), read from dce/volumes.txt
+extraVolumes:
+  enabled: true
+
+# Add in volumeMounts(nfs etc), read from dce/volumeMounts.txt
+extraVolumeMounts:
+  enabled: true
+
+# Add initContainer if required
+extraInitContainers:
+#  - name: do-something
+#    image: busybox
+#    command: ['do', 'something']
+
+waitInitContainer:
+  enabled: true
+  name: <CHARTNAME>-wait
+  tag: eric-enm-init-container
+  imagePullPolicy: Always
+  command: "[ '/bin/sh', '-c', 'bash /var/tmp/check_service.sh -s <s1,s2,s3,s4>' ]"
+
+## Node selector
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+nodeSelector: {}
+
+# LivenessProbe Health Check configuration.
+livenessProbe:
+  enabled: true
+  httpPort: 12987
+  initialDelaySeconds: 600
+  timeoutSeconds: 15
+  periodSeconds: 30
+  failureThreshold: 1
+
+readinessProbe:
+  enabled: true
+  httpPort: 12987
+  initialDelaySeconds: 120
+  periodSeconds: 30
+  timeoutSeconds: 15
+  failureThreshold: 1
+
+## Persist data to a persistent volume
+  ## database data Persistent Volume Storage Class
+  ## If defined, storageClassName: <storageClass>
+  ## If undefined (the default) or set to null, no storageClassName spec is
+  ##   set, choosing the default provisioner.  (gp2 on AWS, standard on
+  ##   GKE, AWS & OpenStack)
+persistence:
+  enabled: true
+  storageClass: "gp2"
+  accessMode: ReadWriteOnce
+  size: 1Gi
+  mountPath: /ericsson/<CHARTNAME>
+  annotations: {}
+
+## Configure resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+resources:
+#  requests:
+#    memory: "6Gi"
+
+# Custom configuration file
+configMaps:
+  enabled: false
+  name: jbossconf-<CHARTNAME>
+  mountPath: /tmp/jboss
+
+## Configure the service
+## ref: http://kubernetes.io/docs/user-guide/services/
+  ## Specify a service type
+  ## ref: https://kubernetes.io/docs/concepts/services-networking/service/#publishing-services---service-types
+service:
+  name: <CHARTNAME>
+  annotations: {}
+  labels: {} 
+
+# Service Ports to Expose, read from dce/servicePorts.txt
+servicePorts:
+  enabled: true
+
+# Add container ports to open, read in from dce/ports.txt(disabled by default as should be included in docker file)
+extraPorts:
+  enabled: true
+
+# Extra Annotations to be added to pod
+podAnnotations: {}
+
+## Tolerations for pod assignment
+### ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+## Affinity for pod assignment
+### ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+affinity: {}
+
+# Constrain which nodes your pod is eligible to be scheduled on
+### ref:  https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
+nodeAffinity: {}
+
+### ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#pod-priority
+priorityClassName: ""
+
+## Allows the specification of additional environment variables
+extraEnv:
+# - name: LOGLEVEL
+#   value: DEBUG
+# - name: MY_ROOT_PASSWORD
+#   valueFrom:
+#     secretKeyRef:
+#       name: my-secret
+#       key: my-root-password
+
+## Additional containers to be added to the pod(s).
+sidecarContainers:
+#  - name: my-sidecar
+#    image: nginx:latest

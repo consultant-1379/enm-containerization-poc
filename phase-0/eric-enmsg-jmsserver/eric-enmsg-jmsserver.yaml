@@ -1,0 +1,104 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: jms
+  labels:
+    app: jms
+spec:
+  clusterIP: None
+  ports:
+  - port: 5445
+    name: jms
+  - port: 4447
+    name: message
+  selector:
+    app: jms
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jms01
+  labels:
+    app: jms01
+spec:
+  ports:
+  - port: 5445
+    name: jms
+  - port: 4447
+    name: message
+  selector:
+    app: jms
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: jms
+spec:
+  selector:
+    matchLabels:
+      app: jms
+  serviceName: jms
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: jms
+    spec:
+      containers:
+      - name: jms
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/eric-enmsg-jmsserver
+        imagePullPolicy: Always
+        readinessProbe:
+          httpGet:
+            port: 12987
+          initialDelaySeconds: 300
+          timeoutSeconds: 10
+          periodSeconds: 30
+          failureThreshold: 2
+        ports:
+          - containerPort: 5445
+          - containerPort: 8080
+          - containerPort: 9999
+          - containerPort: 9990
+          - containerPort: 4447
+        env:
+          - name: ENM_on_Cloud
+            value: "TRUE"
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/jms_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-gp
+            mountPath: /gp
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps
+          - name: pv-jms
+            mountPath: /ericsson/jms
+      volumes:
+        - name: pv-gp
+          configMap:
+            name: gpcloud
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: nfs-data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: nfs-mdt
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: nfs-hcdumps
+  volumeClaimTemplates:
+    - metadata:
+        name: pv-jms
+      spec:
+        storageClassName: "erikube-cinder"
+        accessModes:
+          - ReadWriteOnce
+        resources:
+          requests:
+            storage: 1Gi

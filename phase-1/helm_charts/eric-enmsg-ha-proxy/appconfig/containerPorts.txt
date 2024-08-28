@@ -1,0 +1,7 @@
+- containerPort: 80
+- containerPort: 443
+- containerPort: 22
+- containerPort: 123
+- containerPort: 8666
+- containerPort: 4447
+- containerPort: 8080

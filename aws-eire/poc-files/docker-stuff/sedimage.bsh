@@ -1,0 +1,13 @@
+#!/bin/bash
+
+echo "Testing"
+home=/ericsson/eshanco/ENM-containerisation-POC/aws-eire/poc-files/docker-stuff
+for i in $(ls $home);
+do
+	for j in $(ls $i);
+	do
+		echo "file is $home/$i/$j"
+                sed -i 's|claimName: mdt-new|claimName: mdt|g' $home/$i/$j
+
+	done
+done

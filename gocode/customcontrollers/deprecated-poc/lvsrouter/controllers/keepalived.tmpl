@@ -1,0 +1,33 @@
+vrrp_instance VI_1 {
+    state equal
+
+    # monitored interface
+    interface {{ .iface }}
+   
+   # virtual router's ID
+    virtual_router_id {{ .vrid }}
+
+    # set priority (change this value on each server)
+    # (large number means priority is high)
+    priority {{ .priority }}
+
+    garp_master_refresh 30
+	
+    unicast_src_ip {{ .myIP }}
+	
+    lvs_sync_daemon_interface eth1
+    unicast_peer {
+     {{ .peer }}
+    }
+
+    virtual_ipaddress {
+        {{ range .vips }}
+        {{ . }}{{ end }}
+     }
+    
+	
+notify_master "/var/tmp/primary-backup.sh master"
+notify_backup "/var/tmp/primary-backup.sh backup"
+notify_fault "/var/tmp/primary-backup.sh fault"
+
+}

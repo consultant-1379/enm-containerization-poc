@@ -1,0 +1,135 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flsserv-deployment
+spec:
+  selector:
+    matchLabels:
+      app: flsserv
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: flsserv
+    spec:
+      containers:
+      - name: flsserv
+        resources:
+          requests:
+            memory: "2Gi"
+        image: dockerregistry:5000/rhel6-flsserv
+        ports:
+          - containerPort: 35020
+          - containerPort: 42628
+          - containerPort: 47460
+          - containerPort: 56164
+          - containerPort: 54949
+          - containerPort: 8009
+          - containerPort: 55631
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 8080
+          - containerPort: 9990
+          - containerPort: 4447
+          - containerPort: 9999
+          - containerPort: 56164
+          - containerPort: 3528
+          - containerPort: 58156
+          - containerPort: 46001
+          - containerPort: 54200
+          - containerPort: 12987
+          - containerPort: 63167
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/flsserv_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: data
+            mountPath: /ericsson/tor/data
+          - name: mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: netlog
+            mountPath: /ericsson/netlog
+          - name: custom
+            mountPath: /ericsson/custom
+          - name: dumps
+            mountPath: /ericsson/enm/dumps
+          - name: dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: batch
+            mountPath: /ericsson/batch
+          - name: norollback
+            mountPath: /ericsson/no_rollback
+          - name: configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pm1
+            mountPath: /ericsson/pmic1
+          - name: pm2
+            mountPath: /ericsson/pmic2
+          - name: pmlinks
+            mountPath: /ericsson/symvol
+          - name: upgind
+            mountPath: /ericsson/configuration_management/UpgradeIndependence
+      volumes:
+        - name: configmgt
+          nfs:
+            server: nfsconfigmgt
+            path: "/ericsson/config_mgt"
+        - name: pm1
+          nfs:
+            server: nfspm1
+            path: "/ericsson/pm1"
+        - name: pm2
+          nfs:
+            server: nfspm2
+            path: "/ericsson/pm2"
+        - name: pmlinks
+          nfs:
+            server: nfspmlinks
+            path: "/ericsson/pmlinks1"
+        - name: upgind
+          nfs:
+            server: nfsupgind
+            path: "/ericsson/config_mgmt_upgind"
+        - name: data
+          nfs:
+            server: nfsdata
+            path: "/ericsson/data"
+        - name: dumps
+          nfs:
+            server: nfshcdumps
+            path: "/ericsson/hcdumps"
+        - name: mdt
+          nfs:
+            server: nfsmdt
+            path: "/ericsson/mdt"
+        - name: netlog
+          nfs:
+            server: nfsnetlog
+            path: "/ericsson/netlog"
+        - name: custom
+          nfs:
+            server: nfscustom
+            path: "/ericsson/custom"
+        - name: dlms
+          nfs:
+            server: nfsdlms
+            path: "/ericsson/dlms"
+        - name: batch
+          nfs:
+            server: nfsbatch
+            path: "/ericsson/batch"
+        - name: norollback
+          nfs:
+            server: nfsnorollback
+            path: "/ericsson/no_rollback"

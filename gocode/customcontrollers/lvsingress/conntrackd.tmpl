@@ -1,0 +1,39 @@
+Sync {
+	Mode FTFW {
+		ResendQueueSize 13107200
+		PurgeTimeout 60
+	}
+	UDP {
+		IPv4_address {{ .intIP}}
+		IPv4_Destination_Address {{ .peerIP}}
+		Port 3780
+		Interface {{ .intIface}}
+		SndSocketBuffer 249856000
+		RcvSocketBuffer 249856000
+		Checksum on
+	}
+}
+General {
+	Nice -20
+	HashSize 150016
+	HashLimit 300000
+	LogFile on
+	LockFile /var/lock/conntrack.lock
+	Syslog local5
+	NetlinkBufferSize 8388608
+	NetlinkBufferSizeMaxGrowth 16777216
+	UNIX {
+		Path /var/run/conntrackd.ctl
+		Backlog 20
+	}
+	Filter From Userspace {
+		Protocol Accept {
+			TCP
+		}
+		Address Ignore {
+			IPv4_address 127.0.0.1
+			IPv4_address {{ .extIP}}
+			IPv4_address {{ .intIP}}
+		}
+	}
+}

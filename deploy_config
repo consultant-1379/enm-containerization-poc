@@ -1,0 +1,9 @@
+HOME_DIR=/ericsson/eshanco/cloudnative/ENM-containerisation-POC/phase-0
+APPS="eric-enmsg-neo4j eric-enmsg-opendj eric-enmsg-modelserv eric-enmsg-httpd eric-enmsg-security-service eric-enmsg-sso eric-enmsg-postgres eric-enmsg-openidm eric-enmsg-jmsserver eric-enmsg-gossiprouter eric-enmsg-sps-service eric-enmsg-serviceregistry eric-enmsg-uiservice eric-enmsg-ha-proxy eric-enmsg-access-control eric-enmsg-cmservice eric-enmsg-medrouter eric-enmsg-mscm eric-enmsg-eventbasedclient eric-enmsg-lcmservice eric-enmsg-sentinel eric-enmsg-pki-ra-service eric-enmsg-fm-service eric-enmsg-web-push-service eric-enmsg-networkexplorer eric-enmsg-msfm eric-enmsg-fm-alarm-processing eric-enmsg-mspm eric-enmsg-pmic-router-policy eric-enmsg-fls eric-enmsg-pmservice" 
+NAMESPACE=""
+NFS_STORAGE_CLASS_NAME=nfs-enm1
+STORAGE_CLASS=erikube-rbd
+NFS_SERVER_IP=10.210.140.70
+EXPORT_SHARE_DIR=/ericsson/nfs1
+enm_launcher_hostname=enm-phase-0
+lb_external_port=10.210.153.5

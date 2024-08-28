@@ -1,0 +1,88 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-deployment
+spec:
+  selector:
+    matchLabels:
+      app: apache
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: apache
+    spec:
+      containers:
+      - name: apache
+        image: dockerregistry:5000/rhel6-httpd
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+          - containerPort: 22
+          - containerPort: 123
+          - containerPort: 8666
+          - containerPort: 4447
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]
+        volumeMounts:
+          - name: data
+            mountPath: /ericsson/tor/data
+          - name: mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment      
+          - name: home
+            mountPath: /home/shared
+          - name: custom
+            mountPath: /ericsson/custom
+          - name: dumps
+            mountPath: /ericsson/enm/dumps
+          - name: dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: batch
+            mountPath: /ericsson/batch
+          - name: norollback
+            mountPath: /ericsson/no_rollback
+          - name: smrs
+            mountPath: /ericsson/tor/smrs
+          - name: alex
+            mountPath: /ericsson/enm/alex
+      volumes:
+        - name: data
+          nfs:
+            server: nfsdata
+            path: "/ericsson/data"
+        - name: dumps
+          nfs:
+            server: nfshcdumps
+            path: "/ericsson/hcdumps"
+        - name: mdt
+          nfs:
+            server: nfsmdt
+            path: "/ericsson/mdt"
+        - name: home
+          nfs:
+            server: nfshome
+            path: "/ericsson/home"
+        - name: custom
+          nfs:
+            server: nfscustom
+            path: "/ericsson/custom"
+        - name: dlms
+          nfs:
+            server: nfsdlms
+            path: "/ericsson/dlms"
+        - name: batch
+          nfs:
+            server: nfsbatch
+            path: "/ericsson/batch"
+        - name: norollback
+          nfs:
+            server: nfsnorollback
+            path: "/ericsson/no_rollback"
+        - name: smrs
+          nfs:
+            server: nfssmrs
+            path: "/ericsson/smrs"
+        - name: alex
+          nfs:
+            server: nfsalex
+            path: "/ericsson/alex"

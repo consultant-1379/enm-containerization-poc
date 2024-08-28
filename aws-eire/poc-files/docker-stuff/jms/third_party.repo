@@ -1,0 +1,5 @@
+[thirdparty_extra]
+gpgcheck = 0
+enabled = 1
+baseurl = https://cifwk-oss.lmera.ericsson.se/static/dynamicRepos/atvts818yumRepo
+name = thirdparty_extra Repository

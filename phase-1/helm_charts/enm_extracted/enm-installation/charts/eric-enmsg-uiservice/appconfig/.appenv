@@ -1,0 +1,5 @@
+DEP=true
+NAME=eric-enmsg-uiservice
+SVC=uiserv
+WAIT=true
+WAIT_LIST=gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps

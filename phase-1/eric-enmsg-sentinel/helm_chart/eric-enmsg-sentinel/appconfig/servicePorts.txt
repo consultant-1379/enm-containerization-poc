@@ -1,0 +1,9 @@
+- name: sentinel-port1
+  port: 5093
+  targetPort: 5093
+- name: sentinel-port2
+  port: 5099
+  targetPort: 5099
+- name: ssh
+  port: 22
+  targetPort: 22

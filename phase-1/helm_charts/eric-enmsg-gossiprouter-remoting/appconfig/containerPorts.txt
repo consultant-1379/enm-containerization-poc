@@ -1,0 +1,8 @@
+- containerPort: 12001
+- containerPort: 12002
+- containerPort: 9990
+- containerPort: 8009
+- containerPort: 9999
+- containerPort: 8080
+- containerPort: 4447
+- containerPort: 9999

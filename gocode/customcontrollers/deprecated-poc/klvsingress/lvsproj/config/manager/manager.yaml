@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: klvs-controller-manager-service
+  namespace: default
+  labels:
+    control-plane: klvs-controller-manager
+    controller-tools.k8s.io: "1.0"
+spec:
+  selector:
+    control-plane: klvs-controller-manager
+    controller-tools.k8s.io: "1.0"
+  ports:
+  - port: 443
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: klvs-controller-manager
+  namespace: default
+  labels:
+    control-plane: klvs-controller-manager
+    controller-tools.k8s.io: "1.0"
+spec:
+  selector:
+    matchLabels:
+      control-plane: klvs-controller-manager
+      controller-tools.k8s.io: "1.0"
+  serviceName: klvs-controller-manager-service
+  replicas: 1
+  podManagementPolicy: Parallel
+  template:
+    metadata:
+      labels:
+        control-plane: klvs-controller-manager
+        controller-tools.k8s.io: "1.0"
+    spec:
+      serviceAccountName: default
+      hostNetwork: true
+      containers:
+      - command:
+        - /manager
+        image: armdocker.rnd.ericsson.se/proj_oss_releases/enm/klvs-ingress-controller:latest
+        imagePullPolicy: Always
+        securityContext:
+          privileged: true
+        volumeMounts:
+          - mountPath: /lib/modules
+            name: modules
+            readOnly: true
+          - mountPath: /dev
+            name: dev
+        name: manager
+        resources:
+          limits:
+            cpu: 100m
+            memory: 30Mi
+          requests:
+            cpu: 100m
+            memory: 20Mi
+      terminationGracePeriodSeconds: 10
+      volumes:
+        - name: modules
+          hostPath:
+            path: /lib/modules
+        - name: dev
+          hostPath:
+            path: /dev
+      nodeSelector:
+        type: worker-router

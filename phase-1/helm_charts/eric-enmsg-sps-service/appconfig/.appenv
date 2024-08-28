@@ -1,0 +1,7 @@
+NAME=eric-enmsg-sps-service
+DEP=true
+WAIT=true
+WAIT_LIST=gossiprouter-cache,gossiprouter-remoting,models,ldap-local,jms01
+REQUESTS=true
+REQUESTS_LIST=4Gi
+SVC=sps

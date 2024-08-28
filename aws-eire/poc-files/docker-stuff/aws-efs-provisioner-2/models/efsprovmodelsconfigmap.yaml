@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: efs-provisioner-models
+data:
+  file.system.id: fs-27bcb86c
+  aws.region: us-east-1
+  provisioner.name: example.com/aws-efs-models

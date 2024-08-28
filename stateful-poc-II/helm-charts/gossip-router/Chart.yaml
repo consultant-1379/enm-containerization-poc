@@ -1,0 +1,4 @@
+apiVersion: v1
+description: A Helm chart for gossip-router
+name: gossip-router
+version: 0.0.3

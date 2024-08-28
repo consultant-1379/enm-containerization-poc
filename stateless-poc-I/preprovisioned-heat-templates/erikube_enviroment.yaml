@@ -1,0 +1,51 @@
+parameter_defaults:
+
+  key_name: cloud-user_key
+
+  image_name: centos7-1708
+  master_flavor: m1.medium
+  minion_flavor: m1.large
+  lb_flavor:  m1.medium
+  manager_flavor: m1.medium
+
+  external_network: XXprovider_networkXX
+
+  erikube_use_config_drive: true
+  erikube_timezone: UTC
+
+  os_user: XXusernameXX
+  os_password: XXpasswordXX
+  os_url: http://131.160.199.5:5000/v3
+  os_project: TOSCA_POC_1
+  ansible_public_key: "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCowCRt4DPeVES9025BwxdmIKvw1bVK/1nVI6Jcvav0Z/smnhBJev+WzBonKqEh+h.r+mzw6T9KHnKROhe7Q4Onhi5LdOF5oFVk081P8KASvUQchZnIcVKkvmPSJ9D5zK2QlL1W0Oql0b Generated-by-Nova"
+  ansible_private_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    MIIEowIBAAKCAQEAqMAkbeAz3lREvdNuQcMXZiCr8NW1Sv9Z1SOiXL2r9Gf7Jp4QB+1BL3hiJFjSZzT5qNgp5daBHczYqB0qgOaYTiPPdxDRsWAlMl8DsnG+w
+    ...
+    2sPE3JHuTRi8Qx7JnRyiliCa/pGfOh46OP++jD00lzqyavX/qLNC
+    -----END RSA PRIVATE KEY-----
+  erikube_s3_container_name: erikube
+  s3_file_name: erikube-0.2.0-1207-x86_64.tgz
+
+  manager_external_ip_address: 131.160.198.135
+  manager_external_gateway: 131.160.198.1
+  manager_external_netmask: 255.255.255.0
+
+  rhel7_iso_image_name: rhel-7-server.iso
+  rhel7_iso_volume_size: '25'
+  rhel7_extras_iso_image_name: rhel-x86_64-server-extras-7.iso
+  rhel7_extras_iso_volume_size: '4'
+
+  #
+  # LB configs
+  #
+  loadbalancer_external_netmask: 255.255.255.0
+  loadbalancer_external_gateway: 131.160.198.1
+  loadbalancer_external_ip_address: 131.160.198.136
+
+resource_registry:
+  "K8S::Network": lib/network.yaml
+  "K8S::Manager": lib/manager.yaml
+  "K8S::SecGroup": lib/sec_group.yaml
+  "K8S::Node": lib/node.yaml
+  "K8S::Loadbalancer": lib/loadbalancer.yaml

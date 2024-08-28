@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: haproxy
+spec:
+  ports:
+    - name: http
+      port: 80
+      targetPort: 80
+    - name: https
+      port: 443
+      targetPort: 443
+    - name: ejb
+      port: 4447
+      targetPort: 4447
+  selector:
+    app: haproxy

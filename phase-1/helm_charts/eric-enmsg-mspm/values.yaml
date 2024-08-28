@@ -1,0 +1,187 @@
+## eric-enmsg-mspm image version
+
+global:
+  registry:
+    url: armdocker.rnd.ericsson.se
+    pullSecret:
+  replicas-eric-enmsg-mspm: 1
+  ingress:
+    enmhost:
+
+
+# Number of replicas(pods) to deploy
+replicas-eric-enmsg-mspm: 1
+
+images:
+  eric-enmsg-mspm:
+    name: eric-enmsg-mspm
+    tag: latest
+    command: "[ '/bin/sh', '-c', 'bash /var/tmp/mspm_config.sh; while true; do sleep 300;done;' ]"
+  waitInitContainer:
+    enabled: true
+    name: eric-enm-init-container
+    tag: latest
+    command: "[ '/bin/sh', '-c', 'bash /var/tmp/check_service.sh -s gossiprouter-cache,gossiprouter-remoting,models,jms01,postgres,sps' ]"
+  enmInitContainer:
+    enabled: false
+    name: eric-enm-init-container
+    tag: latest
+    command: "[ '/bin/sh', '-c', 'bash configure.sh;' ]"
+
+imageCredentials:
+  repoPath: proj_oss_releases/enm 
+  pullPolicy: Always
+  registry:
+    url:
+    pullSecret:
+
+## Allows the specification of additional environment variables
+extraEnv:
+# - name: MY_ROOT_PASSWORD
+#   valueFrom:
+#     secretKeyRef:
+#       name: my-secret
+#       key: my-root-password
+  
+## Configure the service
+## ref: http://kubernetes.io/docs/user-guide/services/
+service:
+  name: mspm
+  annotations: {}
+  labels: {}
+
+ingress:
+  enabled: false
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /
+    nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+  path: /
+  port: 443
+  enmHost:
+
+# Service Ports to Expose, read from appconfig/servicePorts.txt
+servicePorts:
+  enabled: true
+
+# Add container ports to open, read in from appconfig/ports.txt(disabled by default as should be included in docker file)
+extraPorts:
+  enabled: true
+
+## Configure resource requests and limits
+## ref: http://kubernetes.io/docs/user-guide/compute-resources/
+resources:
+  requests:
+    enabled: true
+    memory: 6Gi
+    cpu: 
+  limits:
+    enabled: false
+    memory: LMEM
+    cpu: LCPU
+
+# ENV Wait for Application Dependencies.
+waitInitContainerEnv:
+  enabled: false
+  env:
+    - name: ADMIN_PASSWORD
+      valueFrom:
+        secretKeyRef:
+          name: graphdb-neo4j-secrets
+          key: neo4j-password
+
+# ENM specific init container(ENM image)  
+enmInitContainerEnv:
+  enabled: false
+  env:
+    - name: NEO4J_BOLT_HOST
+      value: "graphdb-neo4j"
+    - name: NEO4J_BOLT_PORT
+      value: "7687"
+    - name: ADMIN_USER
+      value: "neo4j"
+    - name: ADMIN_PASSWORD
+      value: "Neo4jadmin123"
+
+privileged:
+  enabled: false
+
+# Add initContainer if required
+extraInitContainers:
+#  - name: do-something
+#     image: busybox
+#     command: ['do', 'something']
+
+## Additional containers to be added to the pod(s).
+sidecarContainers:
+#  - name: my-sidecar
+#    image: nginx:latest
+
+# Add in volumes(nfs etc), read from appconfig/volumes.txt
+extraVolumes:
+  enabled: true
+
+# Add in volumeMounts(nfs etc), read from appconfig/volumeMounts.txt
+extraVolumeMounts:
+  enabled: true
+  
+# Custom config map, read from appconfig/configMaps.yaml
+configMaps:
+  enabled: false
+  name: config-eric-enmsg-mspm
+  mountPath: MOUNTPOINT
+  
+## Persist data to a persistent volume
+  ## database data Persistent Volume Storage Class
+persistentVolumeClaim:
+  enabled: false
+  storageClass: "gp2"
+  accessMode: ACCESSMODE
+  size: SIZE
+  mountPath: MOUNTPATH
+  annotations: {}
+
+# LivenessProbe Health Check configuration.
+livenessProbe:
+  enabled: true
+  httpPort: 12987
+  initialDelaySeconds: 600
+  timeoutSeconds: 15
+  periodSeconds: 30
+  failureThreshold: 1
+
+readinessProbe:
+  enabled: true
+  httpPort: 12987
+  initialDelaySeconds: 120
+  periodSeconds: 30
+  timeoutSeconds: 15
+  failureThreshold: 1
+
+# Extra Annotations to be added to pod
+podAnnotations: {}
+
+## Tolerations for pod assignment
+### ref: https://kubernetes.io/docs/concepts/configuration/taint-and-toleration/
+tolerations: []
+
+## Affinity for pod assignment
+### ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#affinity-and-anti-affinity
+affinity: {}
+
+# Constrain which nodes your pod is eligible to be scheduled on
+### ref:  https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#node-affinity-beta-feature
+nodeAffinity: {}
+
+### ref: https://kubernetes.io/docs/concepts/configuration/pod-priority-preemption/#pod-priority
+priorityClassName: ""
+
+## Node selector
+## ref: https://kubernetes.io/docs/concepts/configuration/assign-pod-node/#nodeselector
+nodeSelector: {}
+
+#https://kubernetes.io/docs/reference/federation/extensions/v1beta1/definitions/#_v1beta1_deploymentstrategy
+updateStrategy:
+  type: RollingUpdate
+  rollingUpdate:
+    maxUnavailable: 0
+    maxSurge: 1

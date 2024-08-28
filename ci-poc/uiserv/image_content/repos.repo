@@ -1,0 +1,17 @@
+[enm]
+gpgcheck = 0
+enabled = 1
+baseurl = http://repo/enm/
+name = ENM Repository
+
+[rhel6]
+gpgcheck = 0
+enabled = 1
+baseurl = http://repo/6/
+name = ENM Repository
+
+[rhel6_updates]
+gpgcheck = 0
+enabled = 1
+baseurl = http://repo/rhel6_updates/
+name = ENM Repository

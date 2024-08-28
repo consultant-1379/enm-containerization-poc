@@ -1,0 +1,78 @@
+# Copyright 2017 The Erikube-Helm Authors.
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: {{ .Values.service.name }}
+  labels:
+    app: {{ .Values.service.name }}
+spec:
+  ports:
+    - name: nfs
+      port: 2049
+    - name: mountd
+      port: 20048
+    - name: rpcbind
+      port: 111
+    - name: rpcbind-udp
+      port: 111
+      protocol: UDP
+  selector:
+    app: {{ .Values.service.name }}
+---
+kind: Deployment
+apiVersion: extensions/v1beta1
+metadata:
+  name: {{ .Values.service.name }}
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.service.name }}
+    spec:
+      serviceAccount: {{ .Values.serviceaccount.name }}
+      containers:
+        - name: {{ .Values.serviceaccount.name }}
+          image: {{ .Values.image.repo }}{{ .Values.image.name }}:{{ .Values.image.tag }}
+          ports:
+            - name: nfs
+              containerPort: 2049
+            - name: mountd
+              containerPort: 20048
+            - name: rpcbind
+              containerPort: 111
+            - name: rpcbind-udp
+              containerPort: 111
+              protocol: UDP
+          securityContext:
+            capabilities:
+              add:
+                - DAC_READ_SEARCH
+                - SYS_RESOURCE
+          args:
+            - "-provisioner={{  .Values.storage.provisioner_name }}"
+          env:
+            - name: POD_IP
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.podIP
+            - name: SERVICE_NAME
+              value: {{ .Values.service.name }}
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          imagePullPolicy: "IfNotPresent"
+      volumes:
+        - name: export-volume
+          persistentVolumeClaim:
+            claimName: nfs
+---
+kind: StorageClass
+apiVersion: storage.k8s.io/v1
+metadata:
+    name: {{ .Values.storage.storageclass_name }}
+provisioner: {{  .Values.storage.provisioner_name }}

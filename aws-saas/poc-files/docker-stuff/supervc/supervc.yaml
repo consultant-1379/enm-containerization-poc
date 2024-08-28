@@ -1,0 +1,157 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: supervc-deployment
+spec:
+  selector:
+    matchLabels:
+      app: supervc
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: supervc
+    spec:
+      containers:
+      - name: supervc
+        resources:
+          requests:
+            memory: "2Gi"
+        image: 213418823860.dkr.ecr.us-east-1.amazonaws.com/enmpoc1-registry:rhel6jboss
+        imagePullPolicy: Always
+        ports:
+          - containerPort: 58178
+          - containerPort: 58179
+          - containerPort: 54500
+          - containerPort: 58180
+          - containerPort: 50692
+          - containerPort: 63045
+          - containerPort: 63013
+          - containerPort: 9990 
+          - containerPort: 58151
+          - containerPort: 59560
+          - containerPort: 3528 
+          - containerPort: 63113
+          - containerPort: 8009 
+          - containerPort: 59530
+          - containerPort: 57419
+          - containerPort: 56139
+          - containerPort: 55500
+          - containerPort: 59500
+          - containerPort: 58156
+          - containerPort: 58157
+          - containerPort: 57422
+          - containerPort: 9999 
+          - containerPort: 63056
+          - containerPort: 8080 
+          - containerPort: 52689
+          - containerPort: 58161
+          - containerPort: 57425
+          - containerPort: 58162
+          - containerPort: 58163
+          - containerPort: 58164
+          - containerPort: 56212
+          - containerPort: 58165
+          - containerPort: 58166
+          - containerPort: 58167
+          - containerPort: 59000
+          - containerPort: 58168
+          - containerPort: 54200
+          - containerPort: 58169
+          - containerPort: 57113
+          - containerPort: 63034
+          - containerPort: 58170
+          - containerPort: 58171
+          - containerPort: 59100
+          - containerPort: 58172
+          - containerPort: 58173
+          - containerPort: 58174
+          - containerPort: 58175
+          - containerPort: 50719
+          - containerPort: 4447 
+          - containerPort: 54400
+          - containerPort: 58176
+          - containerPort: 59200
+          - containerPort: 58177
+          - containerPort: 54689
+          - containerPort: 7600
+          - containerPort: 57600
+          - containerPort: 9443
+          - containerPort: 4712
+          - containerPort: 4713
+          - containerPort: 3528
+          - containerPort: 3529
+          - containerPort: 12001
+          - containerPort: 12002
+          - containerPort: 55501
+          - containerPort: 55500
+        command: ["/bin/sh", "-c"]
+        args:
+          - bash /var/tmp/supervc_config.sh; while true; do sleep 300;done;
+        volumeMounts:
+          - name: pv-data
+            mountPath: /ericsson/tor/data
+          - name: pv-mdt
+            mountPath: /etc/opt/ericsson/ERICmodeldeployment              
+          - name: pv-shared
+            mountPath: /ericsson/home             
+          - name: pv-custom
+            mountPath: /ericsson/custom           
+          - name: pv-dumps
+            mountPath: /ericsson/enm/dumps                
+          - name: pv-dlms
+            mountPath: /ericsson/enm/dlms/history/data
+          - name: pv-batch
+            mountPath: /ericsson/batch
+          - name: pv-norollback
+            mountPath: /ericsson/tor/no_rollback
+          - name: pv-configmgt
+            mountPath: /ericsson/config_mgt
+          - name: pv-upgind
+            mountPath: /ericsson/config_mgmt_upgind
+          - name: pv-pmic1
+            mountPath: /ericsson/pmic1
+          - name: pv-pmic2
+            mountPath: /ericsson/pmic2
+          - name: pv-pmlinks
+            mountPath: /ericsson/symvol
+      volumes:
+        - name: pv-data
+          persistentVolumeClaim:
+            claimName: data
+        - name: pv-mdt
+          persistentVolumeClaim:
+            claimName: mdt
+        - name: pv-custom
+          persistentVolumeClaim:
+            claimName: custom
+        - name: pv-dumps
+          persistentVolumeClaim:
+            claimName: dumps
+        - name: pv-dlms
+          persistentVolumeClaim:
+            claimName: dlms
+        - name: pv-batch
+          persistentVolumeClaim:
+            claimName: batch
+        - name: pv-norollback
+          persistentVolumeClaim:
+            claimName: norollback
+        - name: pv-configmgt
+          persistentVolumeClaim:
+            claimName: config-mgt
+        - name: pv-shared
+          persistentVolumeClaim:
+            claimName: shared
+        - name: pv-upgind
+          persistentVolumeClaim:
+            claimName: upgind
+        - name: pv-pmic1
+          persistentVolumeClaim:
+            claimName: pmic1
+        - name: pv-pmic2
+          persistentVolumeClaim:
+            claimName: pmic2                    
+        - name: pv-pmlinks
+          persistentVolumeClaim:
+            claimName: pmlinks

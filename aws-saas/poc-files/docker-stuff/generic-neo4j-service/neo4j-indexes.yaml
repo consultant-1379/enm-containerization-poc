@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: config-indexes
+data:
+  cm-indexes: |-
+    #each entry in this file represents an index to be created
+    #this file is being used by manageUserIndexes.sh script
+    #<index as reported by the server>|<query to create index on the server>
+    INDEX ON :FM:OpenAlarm(fdn)|INDEX ON :`FM:OpenAlarm`(fdn)
+    INDEX ON :FM:OpenAlarm(alarmNumber, objectOfReference)|INDEX ON :`FM:OpenAlarm`(alarmNumber, objectOfReference)
+    INDEX ON :FM:SpecificProblemInformation(specificProblem, neType)|INDEX ON :`FM:SpecificProblemInformation`(specificProblem, neType)
+    INDEX ON :FM:ProbableCauseInformation(probableCause, neType)|INDEX ON :`FM:ProbableCauseInformation`(probableCause, neType)
+    INDEX ON :FM:EventTypeInformation(eventType, neType)|INDEX ON :`FM:EventTypeInformation`(eventType, neType)
+    INDEX ON :FM:AlarmTypeStatistic(fdn)|INDEX ON :`FM:AlarmTypeStatistic`(fdn)
+    INDEX ON :FM:AlarmCountStatistic(fdn)|INDEX ON :`FM:AlarmCountStatistic`(fdn)
+    INDEX ON :FM:AlarmSeverityStatistic(fdn)|INDEX ON :`FM:AlarmSeverityStatistic`(fdn)
+    INDEX ON :BatchExportService:NodeExportResult(jobId, _bucket)|INDEX ON :`BatchExportService:NodeExportResult`(jobId, ` _bucket`)
+    INDEX ON :BatchExportService:JobInput(jobId, _bucket)|INDEX ON :`BatchExportService:JobInput`(jobId, ` _bucket`)
+    INDEX ON :BatchExportService:JobOutput(jobId, _bucket)|INDEX ON :`BatchExportService:JobOutput`(jobId, ` _bucket`)
+    INDEX ON :BatchExportService:MasterExportJobInput(jobId, _bucket)|INDEX ON :`BatchExportService:MasterExportJobInput`(jobId, ` _bucket`)
+    INDEX ON :CmConfigService:NodeCopyResult(jobId, _bucket)|INDEX ON :`CmConfigService:NodeCopyResult`(jobId, ` _bucket`)
+    INDEX ON :CmConfigService:JobOutput(jobId, _bucket)|INDEX ON :`CmConfigService:JobOutput`(jobId, ` _bucket`)
+    INDEX ON :CmConfigService:AppliedChangeResult(jobId, _bucket)|INDEX ON :`CmConfigService:AppliedChangeResult`(jobId, ` _bucket`)
+    INDEX ON :CmConfigService:ActivateJobOutput(jobId, _bucket)|INDEX ON :`CmConfigService:ActivateJobOutput`(jobId, ` _bucket`)
+    INDEX ON :shm:NEJob(mainJobId, _bucket)|INDEX ON :`shm:NEJob`(mainJobId, ` _bucket`)
+    INDEX ON :shm:ActivityJob(neJobId, _bucket)|INDEX ON :`shm:ActivityJob`(neJobId, ` _bucket`)

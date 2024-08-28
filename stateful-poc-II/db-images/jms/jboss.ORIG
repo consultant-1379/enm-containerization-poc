@@ -1,0 +1,1058 @@
+#!/bin/sh
+#
+# chkconfig: 345 79 29
+# description: Responsible for start & stop of JBosss
+# processname: jboss
+#
+### BEGIN INIT INFO
+# Provides: jboss
+# Required-Start: $remote_fs $network $syslog
+# Required-Stop: $remote_fs $network $syslog
+# Should-Stop: sshd
+# Default-Start: 3 4 5
+# Default-Stop: 0 6
+# Short-Description: start and stop JBoss
+# Description: JBoss application server. The
+#       bedrock of ENM. The init.d script is LSB
+#       and OCF compliant.
+### END INIT INFO
+
+# Source function library.
+. /etc/init.d/functions
+
+# Load Java configuration.
+[ -r /etc/java/java.conf ] && . /etc/java/java.conf
+export JAVA_HOME
+
+command=$1
+
+_MV='/bin/mv -f'
+
+_IP=/sbin/ip
+
+DEFAULT_IF='eth0'
+
+MCAST_ROUTE='224.0.0.0/4'
+
+_KEYTOOL=/usr/java/default/bin/keytool
+export _KEYTOOL
+
+_CAT=/bin/cat
+
+_CHOWN=/bin/chown
+
+_CHMOD=/bin/chmod
+
+_MKDIR=/bin/mkdir
+
+_TOUCH=/bin/touch
+
+_RM=/bin/rm
+
+_PS=/bin/ps
+
+_GREP=/bin/grep
+
+_EGREP=/bin/egrep
+
+_SED=/bin/sed
+
+_SYSCTL=/sbin/sysctl
+
+WAIT_FILE=/tmp/sfs_wait
+
+JVM_CACERTS_STORE=/usr/java/default/jre/lib/security/cacerts
+export JVM_CACERTS_STORE
+
+JBOSS_USER=jboss_user
+export JBOSS_USER
+
+JBOSS_GROUP=jboss
+export JBOSS_GROUP
+
+JBOSS_HOME=/ericsson/3pp/jboss
+export JBOSS_HOME
+# Source jms logger methods
+. $JBOSS_HOME/bin/jmslogger
+
+JBOSS_MODULES="$JBOSS_HOME/modules/system/layers/base"
+export JBOSS_MODULES
+
+JMS_LOG_DIR=/ericsson/jms/log
+export JMS_LOG_DIR
+
+JBOSS_CONSOLE_LOG=$JMS_LOG_DIR/console.log
+export JBOSS_CONSOLE_LOG
+
+JBOSS_SERVER_LOG=$JMS_LOG_DIR/server.log
+export JBOSS_SERVER_LOG
+
+HQ_FATAL_EXCEPTION_LOG=$JMS_LOG_DIR/hqfatalexception.log
+export HQ_FATAL_EXCEPTION_LOG
+
+
+JBOSS_MESSAGING_DATA_DIRECTORY=/ericsson/jms/data
+export JBOSS_MESSAGING_DATA_DIRECTORY
+
+if [ -z "$JOURNAL_DIRECTORY" ]; then
+    JOURNAL_DIRECTORY="$JBOSS_MESSAGING_DATA_DIRECTORY/journal/"
+fi
+
+if [ -z "$JOURNALS_MOVING_LOCK_FILE" ]; then
+    JOURNALS_MOVING_LOCK_FILE="$JBOSS_MESSAGING_DATA_DIRECTORY/journals.moving"
+fi
+
+# Load JBoss AS init.d configuration.
+if [ -z "$JBOSS_CONF" ]; then
+  JBOSS_CONF="$JBOSS_HOME/jboss-as.conf"
+fi
+
+[ -r "$JBOSS_CONF" ] && . "${JBOSS_CONF}"
+
+# Set defaults.
+
+if [ -z "$EXT_MODULES" ]; then
+   EXT_MODULES="/opt/ericsson/jboss/modules"
+fi
+
+export EXT_MODULES
+
+if [ -z "$JBOSS_PIDFILE" ]; then
+  JBOSS_PIDFILE=/var/run/jboss/jboss.pid
+fi
+export JBOSS_PIDFILE
+
+if [ -z "$JBOSS_LOCKFILE" ]; then
+  JBOSS_LOCKFILE=/var/lock/subsys/jboss
+fi
+export JBOSS_LOCKFILE
+
+if [ -z "$STARTUP_WAIT" ]; then
+        STARTUP_WAIT=1800
+fi
+
+if [ -z "$STOP_WAIT" ]; then
+        STOP_WAIT=30
+fi
+
+# Time wait to allow pre-stop tasks complete
+if [ -z "$PRE_STOP_WAIT" ]; then
+        PRE_STOP_WAIT=30
+fi
+export PRE_STOP_WAIT
+
+if [ -z "$LOG_WAIT" ]; then
+        LOG_WAIT=5
+fi
+
+if [ -z "$JBOSS_CONFIG" ]; then
+        JBOSS_CONFIG=standalone.xml
+fi
+
+if [ -z "$STANDALONE_CONF" ]; then
+    STANDALONE_CONF="$JBOSS_HOME/bin/standalone.conf"
+fi
+
+if [ -z "$JOURNAL_SCRIPT" ]; then
+    JOURNAL_SCRIPT="$JBOSS_HOME/bin/journalStatus.sh"
+fi
+
+if [ -z "$MGT_USER" ]; then
+        MGT_USER=hqcluster
+fi
+
+if [ -z "$MGT_PASSWORD" ]; then
+        MGT_PASSWORD=3ric550N
+fi
+
+if [ -z "$UTILITIES_DIR" ]; then
+        UTILITIES_DIR="$JBOSS_HOME/bin/utilities"
+fi
+export UTILITIES_DIR
+
+if [ -z "$UTILITY_IF_FILE_EXISTS" ]; then
+        UTILITY_IF_FILE_EXISTS="$UTILITIES_DIR/ifFileExists.sh"
+fi
+export UTILITY_IF_FILE_EXISTS
+
+if [ -z "$PRE_START_DIR" ]; then
+        PRE_START_DIR="$JBOSS_HOME/bin/pre-start"
+fi
+
+if [ -z "$PRE_STOP_DIR" ]; then
+        PRE_STOP_DIR="$JBOSS_HOME/bin/pre-stop"
+fi
+
+if [ -z "$POST_START_DIR" ]; then
+        POST_START_DIR="$JBOSS_HOME/bin/post-start"
+fi
+
+if [ -z "$POST_STOP_DIR" ]; then
+        POST_STOP_DIR="$JBOSS_HOME/bin/post-stop"
+fi
+
+if [ -z "$JBOSS_SCRIPT" ]; then
+        JBOSS_SCRIPT=$JBOSS_HOME/bin/standalone.sh
+fi
+
+if [ -z "$MODEL_DIR" ]; then
+        MODEL_DIR="/etc/opt/ericsson/ERICmodeldeployment"
+fi
+
+if [ -z "$MODEL_REPO" ]; then
+        MODEL_REPO="$MODEL_DIR/data/repo/modelrepo.xml"
+fi
+
+if [ -z "$MOD_CLUSTER_PORT" ]; then
+        MOD_CLUSTER_PORT="8666"
+fi
+
+if [ -z "$DATA_SHARE_DIR" ]; then
+        DATA_SHARE_DIR=/ericsson/tor/data
+fi
+
+export DATA_SHARE_DIR
+
+if [ -z "$GLOBAL_CONFIG" ]; then
+        GLOBAL_CONFIG="$DATA_SHARE_DIR/global.properties"
+fi
+
+export GLOBAL_CONFIG
+
+if [ -z "$ROOTCACERT_FILE" ]; then
+        ROOTCACERT_FILE="$DATA_SHARE_DIR/certificates/rootCA.pem"
+fi
+
+export ROOTCACERT_FILE
+
+if [ -z "$JMS_SERVER_RUNNING" ]; then
+        JMS_SERVER_RUNNING="$DATA_SHARE_DIR/jmsserver.running"
+fi
+
+export JMS_SERVER_RUNNING
+
+if [ -z "$POSTGRES_REQUIRED" ]; then
+    POSTGRES_REQUIRED=false
+fi
+
+ENM_FD_LIMIT_FILE="/etc/security/limits.d/99-enmlimits.conf"
+
+__is_postgres_running(){
+    /bin/ping -q -c1 postgresql01 > /dev/null 2>&1
+    if [ $? -eq 0 ] ; then
+        POSTGRES_SERVER_RUNNING=true
+    else
+        POSTGRES_SERVER_RUNNING=false
+    fi
+}
+
+prog='jboss-as'
+
+CMD_PREFIX=''
+
+if [ ! -z "$JBOSS_USER" ]; then
+  if [ -r /etc/rc.d/init.d/functions ]; then
+        CMD_PREFIX="daemon --user $JBOSS_USER"
+  else
+    CMD_PREFIX="su - $JBOSS_USER -c"
+  fi
+fi
+
+
+#######################################
+# Action :
+#   __wait_for_sfs
+#  Don't want to start until
+#  1. we have access to shared file system i.e
+#  the models,global.properties and rootCA.pem
+# Globals :
+#   MODEL_REPO
+#   GLOBAL_CONFIG
+#   STARTUP_WAIT
+#   JMS_SERVER
+#   JMS_SERVER_RUNNING
+#   POSTGRES_SERVER_RUNNING
+#   POSTGRES_REQUIRED
+# Arguments:
+#   None
+# Returns:
+#
+#######################################
+__wait_for_sfs() {
+
+# Workaround till we get all jboss starts removed from service group rpms delivered to iso.
+        if [ "$command" == "start" ] ; then
+                if [ -f $WAIT_FILE ]; then
+                        info "Waiting for SFS already in previous jboss command"
+                        exit 3
+                else
+                        $_TOUCH $WAIT_FILE
+                fi
+        fi
+
+        wait=1
+        while ! [[ -f "$GLOBAL_CONFIG" ]]
+        do
+                if [ $wait -gt $STARTUP_WAIT ]; then
+                        break
+                fi
+                info "SFS not ready - waiting"
+                sleep 1
+                let wait=$wait+1;
+        done
+
+        if [[ ! -f "$GLOBAL_CONFIG" ]]; then
+                error "SFS is not ready - timed out"
+        fi
+}
+
+#######################################
+# Action : __update_max_backlogged_socket
+#          Updates the maximum number
+#          of "backlogged sockets"
+#######################################
+__update_max_backlogged_socket() {
+
+conn=$($_SYSCTL -n -q net.core.somaxconn)
+if [ $conn -lt 1028 ]; then
+    $_SYSCTL -w net.core.somaxconn=1028 > /dev/null
+    res=$?
+    if [ $res != 0 ]
+      then
+      warn "Failed to update the net.core.somaxconn to 1028"
+    fi
+fi
+}
+
+#######################################
+# Action :
+#   __preStart
+#   Performs any configuration needed
+#   before starting the JBoss AS.
+# Globals:
+#   PRE_START_DIR
+#   JBOSS_HOME
+#       JBOSS_USER
+#       JBOSS_GROUP
+#       EXT_MODULES
+# Arguments:
+#   None
+# Returns:
+#
+#######################################
+__preStart() {
+
+ __add_route_jgroups
+
+ __update_jboss_user_fd_limit
+
+ __update_max_backlogged_socket
+
+  info "Run pre-start scripts"
+  __run_scripts_in_directory $PRE_START_DIR false
+
+  __move_batch_processing_module
+
+  # change permissions on all DE's so we can overwrite DE with ejb-client.xml
+  $_CHMOD -R 755 $JBOSS_HOME || true
+  $_CHOWN -R $JBOSS_USER:$JBOSS_GROUP $JBOSS_HOME || true
+
+  # change permission on all modules so that they can be run by JBOSS_USER
+  if [ -d ${EXT_MODULES} ];
+  then
+          $_CHOWN -R $JBOSS_USER:$JBOSS_GROUP $EXT_MODULES || true
+  fi
+
+  __set_remote_hosts
+
+  __set_mod_proxy_hosts
+
+  __set_memory_max
+
+  __configure_keystore
+
+  __set_jboss_file_logging
+
+  # Now we have full list of JAVA_OPTS
+  # export for use in standalone.sh
+  export JAVA_OPTS
+
+}
+
+
+#######################################
+# Action :
+#   __process_hornetq_journals
+#   validate hornetq journals
+# Globals:
+# Arguments:
+# Returns:
+#
+#######################################
+__process_hornetq_journals() {
+if [ "$(ls -A $JOURNAL_DIRECTORY)" ]; then
+   # need to create lock file atomically
+   if ( set -o noclobber; > "$JOURNALS_MOVING_LOCK_FILE") 2> /dev/null
+   then
+      set +o noclobber
+   else
+      info " Checking for corrupted HornetQ journals is undergoing"
+      set +o noclobber
+      return
+    fi
+    $JOURNAL_SCRIPT $1 > /dev/null 2>&1 &
+fi
+
+}
+
+#######################################
+# Action :
+#   Updates fd limit for jboss_user in
+#   /etc/security/limits.d/99-enmlimits.conf
+# Globals:
+# Arguments:
+# Returns:
+#
+#######################################
+__update_jboss_user_fd_limit() {
+
+#Update nproc limit
+$_SED -i 's/jboss_user.*nproc.*/jboss_user          -    nproc      15000/' $ENM_FD_LIMIT_FILE
+if [ $? -ne 0 ]
+  then
+  warn "Failed to update nproc limit for jboss_user"
+fi
+
+#Update nofile limit
+$_SED -i 's/jboss_user.*nofile.*/jboss_user          -    nofile     15000/' $ENM_FD_LIMIT_FILE
+if [ $? -ne 0 ]
+  then
+  warn "Failed to update nofile limit for jboss_user"
+fi
+}
+
+#######################################
+# Action :
+#   Define multicast route for jgroups
+#       interface
+# Globals:
+#   GLOBAL_CONFIG
+#   DEFAULT_IF
+#       MCAST_ROUTE
+#       jgroups_bind_nic
+# Arguments:
+# Returns:
+#
+#######################################
+__add_route_jgroups() {
+        if [ -f "$GLOBAL_CONFIG" ]; then
+                EXISTING=$($_IP route show $MCAST_ROUTE | wc -l)
+                if [ "$EXISTING" -eq 0 ];then
+                        #route doesn't exist add it
+                        jg_if=${host_jgroups_bind_nic:-$DEFAULT_IF}
+
+                        info "Adding multicast route for jgroups"
+                        $_IP route add $MCAST_ROUTE dev "$jg_if"
+                fi
+                EXISTING=$($_IP route show $MCAST_ROUTE | wc -l)
+                if [ "$EXISTING" -eq 1 ];then
+                        info "Multicast route for jgroups defined"
+                else
+                        error "No multicast route for jgroups defined"
+                fi
+        fi
+}
+
+#######################################
+# Action :
+#   mover_batch_processing_module :
+#       Batch module must be moved into
+#   /ericsson/3pp/jboss/modules
+#   as it overrides default JBoss
+#   configuration
+# Globals:
+#   EXT_MODULES
+#   JBOSS_MODULES
+# Arguments:
+# Returns:
+#
+#######################################
+__move_batch_processing_module() {
+        if [ -d "${EXT_MODULES}/javax/batch" ]; then
+                $_MV "${EXT_MODULES}/javax/batch/" "$JBOSS_MODULES/javax/"
+                $_MV "${EXT_MODULES}/javaee/api/main/module.xml" "$JBOSS_MODULES/javaee/api/main/module.xml"
+                $_MV "${EXT_MODULES}/org/jberet" "$JBOSS_MODULES/org/"
+                $_MV "${EXT_MODULES}/org/wildfly" "$JBOSS_MODULES/org"
+        fi
+}
+
+
+#######################################
+# Action :
+#   configure_keystore
+# Globals:
+#   None
+# Arguments:
+#   Message string
+# Returns:
+#
+#######################################
+__configure_keystore() {
+        info "Adding certificate to keystore."
+        $_KEYTOOL -list -keystore $JVM_CACERTS_STORE -alias root -storepass changeit > /dev/null 2>&1
+        if [ $? -eq 0 ] ; then
+                info "Certificate already exists nothing to do."
+        else
+                 $_KEYTOOL -noprompt -import -trustcacerts -alias root -file $ROOTCACERT_FILE -storepass changeit -keystore $JVM_CACERTS_STORE > /dev/null 2>&1
+                 if [ $? -eq 0 ] ; then
+                         info "Certificate added to keystore."
+                 else
+                        error "Failed to add certificate to keystore."
+         fi
+    fi
+}
+
+#######################################
+# Action :
+#   __set_jboss_file_logging : Sets the JAVA_OPTS
+# to enable or disable the jboss server's logging
+# to file.
+# Globals:
+#   LOG_TO_FILE
+#   JAVA_OPTS
+# Arguments:
+#   Message string
+# Returns:
+#
+#######################################
+__set_jboss_file_logging() {
+
+    if [ "$LOG_TO_FILE" != "false" ]; then
+        LOG_TO_FILE="true"
+    fi
+
+    JAVA_OPTS="$JAVA_OPTS -Djboss.server.file.log.enabled=${LOG_TO_FILE}"
+}
+
+#######################################
+# Action :
+#   start
+#   Starts the JBoss AS
+# Globals:
+#   JBOSS_PIDFILE
+#   JBOSS_CONSOLE_LOG
+#   JBOSS_SERVER_LOG
+#   JBOSS_USER
+#   LAUNCH_JBOSS_IN_BACKGROUND
+#   JBOSS_SCRIPT
+#   JBOSS_CONSOLE_LOG
+#   STARTUP_WAIT
+#   POST_START_DIR
+#   JBOSS_LOCKFILE
+# Arguments:
+#   None
+# Returns:
+#       0 Resource started or already running
+#       1 Resource failed to start
+#######################################
+start() {
+
+  # Order is important here. Must wait for the SFS to be ready before loading standalone.conf
+  __wait_for_sfs
+
+  [ -r "$STANDALONE_CONF" ] && . "${STANDALONE_CONF}"
+
+  export JB_MANAGEMENT
+  export JB_INTERNAL
+  export JB_PUBLIC
+
+  info "Starting $prog: "
+  if [ -f $JBOSS_PIDFILE ]; then
+    read ppid < $JBOSS_PIDFILE
+    if [ `ps --pid $ppid 2> /dev/null | grep -c $ppid 2> /dev/null` -eq '1' ]; then
+      info "$prog is already running"
+      $_RM -f $WAIT_FILE
+      success
+      echo
+      return 0
+    else
+      rm -f $JBOSS_PIDFILE
+    fi
+  fi
+
+  # Don't run __preStart if jboss already running.
+  __preStart
+
+  $_MKDIR -p $(dirname $JBOSS_CONSOLE_LOG)
+  $_CAT /dev/null > $JBOSS_CONSOLE_LOG
+
+
+  $_MKDIR -p $(dirname $JBOSS_PIDFILE)
+  $_CHOWN $JBOSS_USER $(dirname $JBOSS_PIDFILE) || true
+
+  if [ ! -f $JBOSS_SERVER_LOG ]; then
+    $_MKDIR -p $(dirname $JBOSS_SERVER_LOG)
+    $_CHOWN $JBOSS_USER:$JBOSS $(dirname $JBOSS_SERVER_LOG) || true
+  fi
+
+  if [ -f $JBOSS_LOCKFILE ]; then
+        info "$prog failed to start, lock file exists"
+        failure
+        echo
+        return 1
+  fi
+
+  NUMACTL_VALUE=""
+  # Check HW type
+  if [[ $(/usr/sbin/dmidecode -t system | /bin/grep Product | /bin/awk '{print $5}') == Gen9 ]]; then
+      if [ ! -z "$NUMACTL_JMS_G9" ]; then
+          NUMACTL_VALUE=${NUMACTL_JMS_G9}
+      fi
+  else
+      if [ ! -z "$NUMACTL_JMS" ]; then
+          NUMACTL_VALUE=${NUMACTL_JMS}
+      fi
+  fi
+
+  info "NUMACTL configuration used for starting JMS Server : ($NUMACTL_VALUE)"
+
+  if [ ! -z "$JBOSS_USER" ]; then
+    if [ -r /etc/rc.d/init.d/functions ]; then
+      daemon --user $JBOSS_USER LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$JBOSS_PIDFILE $NUMACTL_VALUE $JBOSS_SCRIPT -c $JBOSS_CONFIG 2>&1 > $JBOSS_CONSOLE_LOG &
+    else
+      su - $JBOSS_USER -c "LAUNCH_JBOSS_IN_BACKGROUND=1 JBOSS_PIDFILE=$JBOSS_PIDFILE $NUMACTL_VALUE $JBOSS_SCRIPT -c $JBOSS_CONFIG" 2>&1 > $JBOSS_CONSOLE_LOG &
+    fi
+  fi
+
+  count=10
+  launched=false
+  started=false
+
+  sleep 10
+
+  if [ -f $JBOSS_PIDFILE ]; then
+        read ppid < $JBOSS_PIDFILE
+        if [ -d /proc/$ppid ]; then
+                started=true
+        fi
+  fi
+
+  # Workaround till we get all jboss starts removed from service group rpms delivered to iso.
+  $_RM -f $WAIT_FILE
+
+  if [ "$started" == "false" ] ; then
+    info "$prog failed to start"
+    failure
+    echo
+    return 1
+  fi
+
+  until [ $count -gt $STARTUP_WAIT ]
+  do
+    status 2> /dev/null
+    retCode=$?
+    if [ $retCode -eq 0 ]; then
+      launched=true
+      break
+    elif [ $retCode -eq 4 ]; then
+      __process_hornetq_journals
+    fi
+    sleep 1
+    let count=$count+1;
+  done
+
+  if [ "$launched" = "false" ] ; then
+    info "$prog failed to startup in the time allotted"
+    failure
+    echo
+    return 1
+  fi
+
+  # Only create lock file upon successfull start of JBoss
+  $_CAT /dev/null > "$JBOSS_LOCKFILE"
+
+  info "Run post-start scripts"
+  __run_scripts_in_directory $POST_START_DIR true
+
+  success
+  echo
+#  return 0
+   wait
+}
+
+
+#######################################
+# Action :
+#   __set_remote_hosts
+#   Find IP address of remote hosts for
+#   RemoteEJB configuration and pass as
+#   properties to the JVM. These host
+#   names are defined in jboss-as.conf
+#   of the service group RPM and their
+#   IP addresses are in the configuration
+#   store ( global.properties )
+#   If no IP address if found default to
+#   localhost.
+#   Configuration store properties have
+#   been loaded by standalone.conf
+# Globals:
+#   REMOTE_CONNECTIONS
+#   JAVA_OPTS
+# Arguments:
+#   None
+# Returns:
+#
+#######################################
+__set_remote_hosts() {
+  if [ ! -z "$REMOTE_EJB_HOSTS" ]; then
+        host_no=1
+        while IFS=',' read -ra ADDR "$REMOTE_EJB_HOSTS"; do
+           for alias in "${ADDR[@]}"; do
+              eval ip=\$$alias
+              remote_host_ip=${ip:-$DEFAULT_IP}
+              EJB_ALIAS="$EJB_ALIAS -Dremote.host$host_no=$remote_host_ip"
+              let host_no=$host_no+1;
+          done
+        done <<< "$REMOTE_EJB_HOSTS"
+        JAVA_OPTS="$JAVA_OPTS $EJB_ALIAS"
+  fi
+}
+
+
+#######################################
+# Action :
+#   __set_mod_proxy_hosts
+#   Pass a list of mod proxy hosts to
+#   to the JVM if mod proxy is needed.
+#   httpd_instances is defined in the
+#   configuration store (global.properties).
+#   Configuration store properties have
+#   been loaded by standalone.conf
+# Globals:
+#   MOD_PROXY_ENABLED
+#   MOD_CLUSTER_PORT
+#   UI_PRES_SERVER
+#   httpd_instances
+# Arguments:
+#   None
+# Returns:
+#
+#######################################
+__set_mod_proxy_hosts() {
+  if [ ! -z "$MOD_PROXY_ENABLED" ]; then
+     if [ ! -z "$httpd_instances" ]; then
+        PROXY_LIST=${httpd_instances//,/:$MOD_CLUSTER_PORT,}":$MOD_CLUSTER_PORT"
+     else
+        PROXY_LIST="$UI_PRES_SERVER:$MOD_CLUSTER_PORT"
+     fi
+  JAVA_OPTS="$JAVA_OPTS -Dmod_proxy_list=$PROXY_LIST"
+  fi
+}
+
+
+############################################
+# Action:
+#       Make sure the MEMORY_MAX is not greater
+#       than the actual memory assigned to the
+#       VM. If it is then take default from
+#       standalone.conf, DEFAULT_MEM.
+# Globals:
+#       DEFAULT_MEM
+#       MEMORY_MAX
+# Arguments
+#       None
+# Returns:
+#       Max memory to assign to JVM
+############################################
+__calculate_memory_max() {
+        avail_mem=$(awk '$1 ~ /^MemTotal:$/ { print int( $2 / 1024) }' /proc/meminfo)
+        if [ "$avail_mem" -gt "$MEMORY_MAX" ];then
+                echo "$MEMORY_MAX"
+        else
+                echo "$DEFAULT_MEM"
+        fi
+}
+
+
+#######################################
+# Action :
+#   __set_memory_max
+#   Sets the memory max value
+# Globals:
+#   JAVA_OPTS
+#   MEMORY_MAX
+#       MMAX
+# Arguments:
+#   None
+# Returns:
+#
+#######################################
+__set_memory_max() {
+        if [ ! -z "$MEMORY_MAX" ]; then
+                mem=$(__calculate_memory_max)
+                # make sure memory settings are fist option in JVM arguments
+                JAVA_OPTS="-Xmx${mem}m -Xms${mem}m $JAVA_OPTS"
+        else
+                JAVA_OPTS="-Xmx${DEFAULT_MEM}m -Xms${DEFAULT_MEM}m $JAVA_OPTS"
+        fi
+}
+
+
+#######################################
+# Action :
+#   __run_scripts_in_directory
+#   Run all scripts in specified
+#   directory
+# Globals:
+#   None
+# Arguments:
+#   1 - Absolute path to the directory
+#   containing scripts to be run.
+#   2 - Run as background process, true/false
+# Returns:
+#
+#######################################
+__run_scripts_in_directory() {
+        for SCRIPT in $1/*
+                do
+                        if [ -f "$SCRIPT" -a -x "$SCRIPT" ]
+                        then
+                                if [ "$2" = true ] ; then
+                                        info "JBoss execute script as background process : $SCRIPT"
+                                        $SCRIPT > /dev/null 2>&1 &
+                                else
+                                        info "JBoss execute script : $SCRIPT"
+                                        $SCRIPT > /dev/null 2>&1
+                                fi
+                        fi
+                done
+}
+
+#######################################
+# Action :
+#   stop
+#   Issue shutdown notification to all
+#   services running in the VM before
+#   stopping JBoss.
+# Globals:
+#   MGT_USER
+#   MGT_PASSWORD
+#   JB_MGT
+# Arguments:
+#   None
+# Returns:
+#
+#######################################
+stop() {
+
+        info $"Stopping $prog: "
+        count=0;
+
+        if [ -f $JBOSS_PIDFILE ]; then
+
+            info "Run pre-stop scripts"
+            __run_scripts_in_directory "$PRE_STOP_DIR" false
+
+            read kpid < $JBOSS_PIDFILE
+            let kwait=$STOP_WAIT
+
+            # Try issuing SIGTERM
+            kill -15 "$kpid"
+            until [ `ps --pid $kpid 2> /dev/null | grep -c $kpid 2> /dev/null` -eq '0' ] || [ $count -gt $kwait ]
+            do
+              sleep 1
+              let count=$count+1;
+            done
+
+            if [ $count -gt $kwait ]; then
+            kill -9 "$kpid"
+            fi
+        fi
+        rm -f $JBOSS_PIDFILE
+
+        if [ -f $JBOSS_LOCKFILE ]; then
+                $_RM -f $JBOSS_LOCKFILE
+        fi
+
+        if [ -f $WAIT_FILE ]; then
+        $_RM -f $WAIT_FILE
+    fi
+
+    if [ -f $JOURNALS_MOVING_LOCK_FILE ]; then
+        $_RM -f $JOURNALS_MOVING_LOCK_FILE
+    fi
+
+    info "Run post-stop scripts"
+    __run_scripts_in_directory $POST_STOP_DIR true
+
+        if $_RM -f $HQ_FATAL_EXCEPTION_LOG
+        then
+                info "Successfully deleted $HQ_FATAL_EXCEPTION_LOG"
+        else
+                error "Failed to delete $HQ_FATAL_EXCEPTION_LOG"
+        fi
+    # sleep for 40 seconds in case of any JMS client gets stuck
+    # see https://jira-nam.lmera.ericsson.se/browse/TORF-136167
+    # [RedHat 01675923] for details
+    sleep 40s
+
+    success
+    echo
+}
+
+#######################################
+# Action :
+#   status
+# Globals:
+#   MGT_USER
+#   MGT_PASSWORD
+#   JBOSS_PIDFILE
+#   JBOSS_LOCKFILE
+# Arguments:
+#   None
+# Returns:
+#   0 Resource is started, DE(s) deployed
+#   1 Resource is in failed state, pid file exists
+#   2 Resource is in failed state, lock file exists
+#   3 Resource is stopped or starting
+#   4 Resource is running, HornetQ server is not active
+#######################################
+status() {
+
+  if [ ! -f $JBOSS_PIDFILE ]; then
+    echo "$prog is not running"
+    return 3
+  fi
+
+  read ppid < $JBOSS_PIDFILE
+  JB_MGMT_ADDR=$($_PS -f --pid $ppid 2> /dev/null | $_GREP $ppid 2> /dev/null | $_SED -e 's/.*jboss.bind.address.management=\(\S*\).*/\1/g' 2> /dev/null)
+  if [ -z "$JB_MGMT_ADDR" ]; then
+    echo "$prog dead but pid file exists"
+    return 1
+  fi
+
+  if [ -s $HQ_FATAL_EXCEPTION_LOG ]
+  then
+    error "FATAL exception(s) occurred in HornetQ-Server, reporting status as unhealthy"
+        __process_hornetq_journals "move_without_validation"
+        return 5
+  fi
+  HORNETQ_STATUS=$(curl --digest -L -D - http://$JB_MGMT_ADDR:9990/management \
+    --header 'Content-Type: application/json' \
+    -d '{"operation":"read-attribute","address":[{"subsystem":"messaging"},{"hornetq-server":"default"}],"name":"active","json.pretty":1}' \
+    -u $MGT_USER:$MGT_PASSWORD)
+
+        if $_EGREP "result.*:.*true"<<<"$HORNETQ_STATUS"
+        then
+                echo "$prog is running"
+                return 0
+        fi
+
+  JBOSS_STATUS=$(curl --digest -L -w 'RETURN_CODE=%{http_code}' -D - http://"$JB_MGMT_ADDR":9990/management \
+    --header "Content-Type: application/json" \
+    -d '{"operation":"read-attribute","name":"server-state","json.pretty":1}' \
+    -u $MGT_USER:$MGT_PASSWORD)
+        HTTP_CODE=$($_GREP "RETURN_CODE="<<<"$JBOSS_STATUS"|awk -F'RETURN_CODE=' '{print $2}')
+
+        if $_EGREP "result.*:.*running"<<<"$JBOSS_STATUS"
+        then
+                error "$prog is running but HornetQ server is not active"
+                return 4
+        elif [ "$HTTP_CODE" == "503" ]
+        then
+                error "$prog process is running but $prog is not in good state"
+                return 4
+        elif [ -f $JBOSS_LOCKFILE ]
+        then
+      echo "$prog dead but lock file exists"
+      return 2
+        fi
+
+  echo "$prog is not running"
+  return 3
+}
+
+
+#######################################
+# Action :
+#   monitor
+# Globals:
+#   MGT_USER
+#   MGT_PASSWORD
+#   JB_MGT
+# Arguments:
+#   None
+# Returns:
+#   0 Resource is running
+#   1 Resource is in failed state
+#   7 Resource is stopped or still starting
+#######################################
+monitor() {
+
+ status
+ rc=$?
+ if [ $rc -eq 0 ] ; then
+        return 0
+ elif [ $rc -eq 1 ] ; then
+        return 1
+ elif [ $rc -eq 2 ] ; then
+        return 7
+ elif [ $rc -eq 3 ] ; then
+        return 7
+ elif [ $rc -eq 4 ] ; then
+        return 1
+ fi
+
+ return 1
+}
+
+metadata_jboss()
+{
+    $_CAT <<END
+<?xml version="1.0"?>
+<!DOCTYPE resource-agent SYSTEM "ra-api-1.dtd">
+
+<resource-agent name="jboss">
+<version>1.0</version>
+
+<longdesc lang="en">
+Resource script for Jboss. It manages a Jboss instance as an HA resource.
+</longdesc>
+<shortdesc lang="en">Manages a JBoss application server instance</shortdesc>
+
+</resource-agent>
+END
+    return 0
+}
+
+
+# This is the main section of the script
+
+case "$1" in
+  start)
+      start
+      ;;
+  stop)
+      stop
+      ;;
+  restart)
+      $0 stop
+      sleep 10
+      $0 start
+      ;;
+  status)
+      status
+      ;;
+  monitor)
+    monitor
+      ;;
+  meta-data)
+    metadata_jboss
+      ;;
+  *)
+      ## If no parameters are given, print which are available.
+      echo "Usage: $0 {start|stop|status|restart|monitor|meta-data}"
+      exit 1
+      ;;
+esac
+

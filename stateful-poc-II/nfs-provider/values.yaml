@@ -1,0 +1,27 @@
+# Default values for nfs-provider.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+replicaCount: 1
+
+rbac:
+  enabled: true
+  clusterrole_name: nfs-provisioner-runner
+  clusterbinding_name: run-nfs-provisioner
+  role_ref_name: nfs-provisioner-runner
+
+image:
+  repo: armdocker.rnd.ericsson.se/proj_kds/erikube/ 
+  name: nfs-provisioner
+  tag: v1.0.8
+  pullPolicy: IfNotPresent
+
+serviceaccount:
+  name: nfs-provisioner
+
+service:
+  name: nfs-provisioner
+
+storage:
+  provisioner_name: erikube.org/nfs
+  storageclass_name: erikube-nfs
+  hostpath: /srv

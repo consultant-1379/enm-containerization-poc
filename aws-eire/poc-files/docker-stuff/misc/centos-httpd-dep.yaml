@@ -1,0 +1,12 @@
+kind: Pod
+apiVersion: v1
+metadata:
+  name: centos-httpd
+spec:
+  containers:
+  - name: test-pod
+    image: 152254703525.dkr.ecr.eu-west-1.amazonaws.com/eirepoc1-registry:centos-httpd
+    command: ["/bin/sh", "-c"]
+    args:
+      - bash /run-httpd.sh; while true; do sleep 300;done;
+  restartPolicy: Never  

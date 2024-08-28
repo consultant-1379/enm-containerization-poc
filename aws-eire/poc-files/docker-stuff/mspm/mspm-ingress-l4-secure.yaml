@@ -1,0 +1,11 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: mspm-ingress-l4-secure
+  annotations:
+    protocol: TCP
+    layer: L4
+spec:
+  backend:
+    serviceName: mspm-corba-service-secure
+    servicePort: 58170

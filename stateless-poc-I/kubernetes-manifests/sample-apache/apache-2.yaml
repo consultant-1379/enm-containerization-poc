@@ -1,0 +1,22 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: apache-deployment-2
+spec:
+  selector:
+    matchLabels:
+      app: apache-2
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: apache-2
+    spec:
+      containers:
+      - name: apache-2
+        image: dockerregistry:5000/rhel6-httpd
+        ports:
+          - containerPort: 80
+          - containerPort: 443
+        command: ["/bin/bash"]
+        args: ["-c","while true; do sleep 10;done"]

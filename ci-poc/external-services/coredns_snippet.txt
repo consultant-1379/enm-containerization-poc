@@ -1,0 +1,5 @@
+    service.enm:53 {
+        errors
+        cache 30
+        proxy . 10.0.10.171 10.0.10.172 10.0.10.173
+    }

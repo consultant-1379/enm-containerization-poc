@@ -1,0 +1,8 @@
+{{- if .Values.configMaps.enabled }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.configMaps.name }}
+data:
+{{ .Files.Get "config/configMaps.yaml" | indent 2 }}
+{{- end }}
